@@ -203,6 +203,10 @@
         gap: 9px;
     }
 
+    .logo-text {
+        white-space: nowrap;
+    }
+
     .logo-mark {
         flex-shrink: 0;
         transition: transform 0.4s ease;
@@ -222,16 +226,38 @@
         gap: 22px;
     }
 
-    .nav-right a {
+    .nav-link {
+        position: relative;
         color: var(--muted);
         text-decoration: none;
         font-size: 14px;
         font-weight: 500;
-        transition: color 0.2s;
+        padding-bottom: 4px;
+        transition: color 0.25s ease;
     }
 
-    .nav-right a:hover {
+    .nav-link:hover {
         color: var(--accent);
+    }
+
+    .nav-link::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 100%;
+        bottom: 0;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--accent);
+        transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-link.active {
+        color: var(--accent);
+    }
+
+    .nav-link.active::after {
+        right: 0;
     }
 
     .theme-button {
@@ -258,6 +284,7 @@
     /* HERO */
 
     .hero {
+        position: relative;
         max-width: 1200px;
         min-height: 82vh;
 
@@ -268,6 +295,66 @@
         grid-template-columns: 1.3fr 0.7fr;
         gap: 60px;
         align-items: center;
+        overflow: hidden;
+    }
+
+    .hero-content,
+    .hero > .feature-col {
+        position: relative;
+        z-index: 1;
+    }
+
+
+    /* FADED CODE BACKGROUND */
+
+    .code-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+        -webkit-mask-image: linear-gradient(to bottom, black 45%, transparent 92%);
+        mask-image: linear-gradient(to bottom, black 45%, transparent 92%);
+    }
+
+    .code-col {
+        position: absolute;
+        top: 0;
+        white-space: pre;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-size: 13px;
+        line-height: 1.9;
+        color: var(--accent);
+        opacity: 0.12;
+        animation: codeScroll 46s linear infinite;
+    }
+
+    .code-col.col-2 {
+        left: 56%;
+        animation-duration: 60s;
+        animation-direction: reverse;
+        opacity: 0.08;
+    }
+
+    .code-col:not(.col-2) {
+        left: 4%;
+    }
+
+    @keyframes codeScroll {
+        from { transform: translateY(0); }
+        to { transform: translateY(-50%); }
+    }
+
+    @media (max-width: 900px) {
+        .code-col.col-2 {
+            display: none;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .code-col {
+            animation: none;
+        }
     }
 
     .label {
@@ -653,7 +740,7 @@
             gap: 10px;
         }
 
-        .nav-right a {
+        .nav-link {
             font-size: 13px;
         }
 
@@ -676,7 +763,7 @@
 
 <nav>
 
-    <a href="#" class="logo">
+    <a href="#home" class="logo">
         <svg class="logo-mark" width="28" height="28" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="1" y="1" width="28" height="28" rx="8" stroke="var(--accent)" stroke-width="1.4"/>
             <path d="M10 22V8" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
@@ -684,16 +771,20 @@
             <path d="M10 14.6H17.5C19.5 14.6 21 16.1 21 18C21 19.9 19.5 22 17.5 22H10" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
             <circle cx="23.5" cy="7" r="2" fill="var(--accent)"/>
         </svg>
-        building<span>wAI</span>
+        <span class="logo-text">building<span>wAI</span></span>
     </a>
 
     <div class="nav-right">
 
-        <a href="#about">
+        <a href="#home" class="nav-link active" data-target="home">
+            Home
+        </a>
+
+        <a href="#about" class="nav-link" data-target="about">
             About Me
         </a>
 
-        <a href="#projects">
+        <a href="#projects" class="nav-link" data-target="projects">
             Projects
         </a>
 
@@ -712,9 +803,88 @@
 
 <!-- HOME -->
 
-<section class="hero">
+<section class="hero" id="home">
 
-    <div>
+    <div class="code-bg" aria-hidden="true">
+        <div class="code-col">def build(project):
+    plan()
+    code()
+    test()
+    return project
+
+class Game:
+    def __init__(self):
+        self.state = "ready"
+
+    def update(self):
+        self.state = "running"
+
+for step in range(10):
+    build(step)
+
+# keep improving
+def build(project):
+    plan()
+    code()
+    test()
+    return project
+
+class Game:
+    def __init__(self):
+        self.state = "ready"
+
+    def update(self):
+        self.state = "running"
+
+for step in range(10):
+    build(step)
+
+# keep improving</div>
+        <div class="code-col col-2">public class Project {
+    public void Run() {
+        int score = 0;
+        while (playing) {
+            score++;
+        }
+    }
+}
+
+using System;
+class Program {
+    static void Main() {
+        Console.WriteLine("ready");
+    }
+}
+
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;!-- built by hand --&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+public class Project {
+    public void Run() {
+        int score = 0;
+        while (playing) {
+            score++;
+        }
+    }
+}
+
+using System;
+class Program {
+    static void Main() {
+        Console.WriteLine("ready");
+    }
+}
+
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;!-- built by hand --&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</div>
+    </div>
+
+    <div class="hero-content">
 
         <div class="label">
             buildingwAI
@@ -977,7 +1147,10 @@
 
 <script>
 
-    /* SUBTLE PARALLAX ON THE AMBIENT GLOW */
+    /* SUBTLE PARALLAX ON THE AMBIENT GLOW + CODE BACKGROUND FADE */
+
+    const codeBg = document.querySelector('.code-bg');
+    const heroEl = document.getElementById('home');
 
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         let ticking = false;
@@ -985,11 +1158,19 @@
             if (!ticking) {
                 requestAnimationFrame(() => {
                     document.body.style.setProperty('--parallax-y', (window.scrollY * 0.06) + 'px');
+
+                    if (codeBg && heroEl) {
+                        const fade = 1 - Math.min(1, window.scrollY / (heroEl.offsetHeight * 0.7));
+                        codeBg.style.opacity = Math.max(0, fade);
+                    }
+
                     ticking = false;
                 });
                 ticking = true;
             }
         });
+    } else if (codeBg) {
+        codeBg.style.opacity = 1;
     }
 
 
@@ -1079,6 +1260,27 @@
 
     } else {
         revealEls.forEach((el) => el.classList.add('in-view'));
+    }
+
+
+    /* NAV TABS — highlight the tab for the section in view */
+
+    const navLinks = document.querySelectorAll('.nav-link');
+    const trackedSections = document.querySelectorAll('#home, #about, #projects');
+
+    if ('IntersectionObserver' in window && navLinks.length && trackedSections.length) {
+
+        const navObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach((link) => {
+                        link.classList.toggle('active', link.dataset.target === entry.target.id);
+                    });
+                }
+            });
+        }, { threshold: 0.5, rootMargin: '-72px 0px -40% 0px' });
+
+        trackedSections.forEach((section) => navObserver.observe(section));
     }
 
 </script>
