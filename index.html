@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="buildingwAI — a personal site for projects built with the help of AI.">
+<title>buildingwAI</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='30' rx='8' fill='%2307090b'/%3E%3Cpath d='M10 22V8' stroke='%236f9bc4' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M10 8H16.5C18.5 8 20 9.5 20 11.3C20 13.1 18.5 14.6 16.5 14.6H10' stroke='%236f9bc4' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M10 14.6H17.5C19.5 14.6 21 16.1 21 18C21 19.9 19.5 22 17.5 22H10' stroke='%236f9bc4' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='23.5' cy='7' r='2' fill='%236f9bc4'/%3E%3C/svg%3E">
 
-<title>My Website</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
 
@@ -17,23 +20,34 @@
     }
 
     :root {
-        --bg: #f5f5f7;
-        --card: #ffffff;
-        --text: #111111;
-        --muted: #707070;
-        --border: #dedede;
-        --accent: #111111;
-        --accentText: #ffffff;
+        --bg: #07090b;
+        --bg-soft: #0d1116;
+        --card: #10151b;
+        --text: #e7edf3;
+        --muted: #8b96a3;
+        --border: #1f2630;
+        --accent: #6f9bc4;
+        --accent-dim: rgba(111, 155, 196, 0.12);
+        --accent-line: rgba(111, 155, 196, 0.28);
+        --on-accent: #07090b;
+        --shadow: rgba(0, 0, 0, 0.35);
+        --nav-bg: rgba(7, 9, 11, 0.85);
+        --status-green: #3ecf6b;
     }
 
-    body.dark {
-        --bg: #0b0b0d;
-        --card: #151518;
-        --text: #f5f5f5;
-        --muted: #a1a1aa;
-        --border: #29292d;
-        --accent: #ffffff;
-        --accentText: #111111;
+    body.light {
+        --bg: #f5f7f9;
+        --bg-soft: #eef1f5;
+        --card: #ffffff;
+        --text: #131a22;
+        --muted: #626d79;
+        --border: #dfe4ea;
+        --accent: #3d6f92;
+        --accent-dim: rgba(61, 111, 146, 0.08);
+        --accent-line: rgba(61, 111, 146, 0.25);
+        --on-accent: #ffffff;
+        --shadow: rgba(30, 41, 59, 0.10);
+        --nav-bg: rgba(245, 247, 249, 0.85);
     }
 
     html {
@@ -41,13 +55,113 @@
     }
 
     body {
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: 'Inter', Arial, sans-serif;
         background: var(--bg);
         color: var(--text);
+        overflow-x: hidden;
+        position: relative;
+        transition: background 0.5s ease, color 0.5s ease;
+    }
 
-        transition:
-            background 0.3s ease,
-            color 0.3s ease;
+    /* soft ambient glow, not a flat flood of color */
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background:
+            radial-gradient(circle at 18% 8%, rgba(111, 155, 196, 0.12), transparent 40%),
+            radial-gradient(circle at 85% 30%, rgba(111, 155, 196, 0.07), transparent 45%),
+            var(--bg);
+        transition: background 0.5s ease;
+        transform: translateY(var(--parallax-y, 0px));
+        will-change: transform;
+    }
+
+    h1, h2, h3 {
+        font-family: 'Space Grotesk', 'Inter', sans-serif;
+        font-weight: 600;
+    }
+
+    a {
+        color: inherit;
+    }
+
+    ::selection {
+        background: var(--accent);
+        color: var(--on-accent);
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+    }
+
+
+    /* CUSTOM CURSOR (pointer devices only) */
+
+    body.has-cursor,
+    body.has-cursor a,
+    body.has-cursor button {
+        cursor: none;
+    }
+
+    .cursor-dot,
+    .cursor-ring {
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 9999;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0;
+        transition: opacity 0.3s ease, width 0.2s ease, height 0.2s ease, background 0.2s ease;
+    }
+
+    .cursor-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--accent);
+    }
+
+    .cursor-ring {
+        width: 30px;
+        height: 30px;
+        border: 1px solid var(--accent-line);
+    }
+
+    body.has-cursor .cursor-dot,
+    body.has-cursor .cursor-ring {
+        opacity: 1;
+    }
+
+    body.cursor-active .cursor-ring {
+        width: 44px;
+        height: 44px;
+        border-color: var(--accent);
+    }
+
+
+    /* SCROLL REVEAL */
+
+    .reveal {
+        opacity: 0;
+        transform: translateY(-34px);
+        transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.in-view {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .reveal {
+            opacity: 1;
+            transform: none;
+            transition: none;
+        }
     }
 
 
@@ -58,76 +172,86 @@
         top: 0;
         z-index: 100;
 
-        height: 75px;
+        min-height: 72px;
 
         display: flex;
         align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap;
 
-        padding: 0 7%;
+        gap: 10px;
+        padding: 14px 7%;
 
-        background: var(--bg);
+        background: var(--nav-bg);
+        backdrop-filter: blur(10px);
         border-bottom: 1px solid var(--border);
+        transition: background 0.4s ease, border-color 0.4s ease;
     }
 
     .logo {
-        color: var(--text);
         text-decoration: none;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        white-space: nowrap;
+    }
 
-        font-size: 20px;
-        font-weight: 900;
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
 
-        letter-spacing: -1px;
+    .logo-mark {
+        flex-shrink: 0;
+        transition: transform 0.4s ease;
+    }
+
+    .logo:hover .logo-mark {
+        transform: rotate(-6deg);
     }
 
     .logo span {
-        color: var(--muted);
-        font-weight: 400;
+        color: var(--accent);
     }
 
     .nav-right {
         display: flex;
         align-items: center;
-        gap: 28px;
+        gap: 22px;
     }
 
     .nav-right a {
         color: var(--muted);
         text-decoration: none;
-
         font-size: 14px;
-        font-weight: 600;
-
-        transition: 0.2s;
+        font-weight: 500;
+        transition: color 0.2s;
     }
 
     .nav-right a:hover {
-        color: var(--text);
+        color: var(--accent);
     }
 
-
-    /* THEME BUTTON */
-
     .theme-button {
-        width: 40px;
-        height: 40px;
-
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
-
         border: 1px solid var(--border);
-
         background: var(--card);
         color: var(--text);
-
         cursor: pointer;
-
-        font-size: 17px;
-
-        transition: 0.25s;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, background 0.4s ease;
     }
 
     .theme-button:hover {
-        transform: rotate(15deg) scale(1.08);
+        transform: rotate(20deg) scale(1.08);
+        border-color: var(--accent-line);
     }
 
 
@@ -135,54 +259,41 @@
 
     .hero {
         max-width: 1200px;
-        min-height: 85vh;
+        min-height: 82vh;
 
         margin: auto;
-
-        padding: 100px 7%;
+        padding: 90px 7% 60px;
 
         display: grid;
         grid-template-columns: 1.3fr 0.7fr;
-
-        gap: 70px;
-
+        gap: 60px;
         align-items: center;
     }
 
     .label {
-        color: var(--muted);
-
-        font-size: 11px;
-        font-weight: bold;
-
-        letter-spacing: 3px;
-
-        margin-bottom: 22px;
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 18px;
     }
 
     h1 {
-        font-size: clamp(55px, 8vw, 100px);
-
-        line-height: 0.9;
-
-        letter-spacing: -6px;
-
-        margin-bottom: 30px;
+        font-size: clamp(42px, 7.5vw, 92px);
+        line-height: 0.98;
+        letter-spacing: -3px;
+        margin-bottom: 26px;
     }
 
     h1 span {
-        color: var(--muted);
+        color: var(--accent);
     }
 
     .intro {
-        max-width: 570px;
-
+        max-width: 540px;
         color: var(--muted);
-
-        font-size: 17px;
-        line-height: 1.7;
-
-        margin-bottom: 35px;
+        font-size: 16px;
+        line-height: 1.75;
+        margin-bottom: 34px;
     }
 
 
@@ -196,102 +307,135 @@
 
     .button {
         display: inline-block;
-
-        padding: 15px 22px;
-
+        padding: 14px 22px;
         border-radius: 8px;
-
         text-decoration: none;
-
         font-size: 14px;
-        font-weight: bold;
-
-        transition: 0.25s;
+        font-weight: 600;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease, border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
     }
 
     .primary {
         background: var(--accent);
-        color: var(--accentText);
+        color: var(--on-accent);
     }
 
     .primary:hover {
         transform: translateY(-3px);
+        box-shadow: 0 10px 28px var(--accent-line);
     }
 
     .secondary {
         color: var(--text);
-
         border: 1px solid var(--border);
     }
 
     .secondary:hover {
-        background: var(--card);
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+
+    /* STATUS HEADER */
+
+    .feature-col {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .status-header {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--muted);
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--status-green);
+        box-shadow: 0 0 0 0 rgba(62, 207, 107, 0.55);
+        animation: statusPulse 2s ease-out infinite;
+    }
+
+    @keyframes statusPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(62, 207, 107, 0.55);
+            opacity: 1;
+        }
+        70% {
+            box-shadow: 0 0 0 9px rgba(62, 207, 107, 0);
+            opacity: 0.75;
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(62, 207, 107, 0);
+            opacity: 1;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .status-dot {
+            animation: none;
+        }
     }
 
 
     /* GAME FEATURE */
 
     .feature {
-        background: var(--card);
-
+        background: linear-gradient(180deg, var(--card), var(--bg-soft));
         border: 1px solid var(--border);
-
         border-radius: 20px;
-
         padding: 30px;
-
-        min-height: 350px;
+        min-height: 320px;
 
         display: flex;
         flex-direction: column;
 
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06);
-
-        transition: 0.3s;
+        box-shadow: 0 25px 60px var(--shadow);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, background 0.4s ease, box-shadow 0.4s ease;
     }
 
     .feature:hover {
-        transform: translateY(-8px);
+        transform: translateY(-6px);
+        border-color: var(--accent-line);
     }
 
     .feature-top {
         display: flex;
         justify-content: space-between;
-
         color: var(--muted);
-
-        font-size: 10px;
-        letter-spacing: 2px;
+        font-size: 11px;
+        letter-spacing: 1px;
     }
 
     .game-icon {
-        font-size: 60px;
-
-        margin-top: 70px;
-        margin-bottom: 20px;
+        font-size: 52px;
+        margin-top: 55px;
+        margin-bottom: 18px;
     }
 
     .feature h2 {
-        font-size: 28px;
+        font-size: 26px;
         margin-bottom: 10px;
     }
 
     .feature p {
         color: var(--muted);
-
         font-size: 14px;
         line-height: 1.6;
     }
 
     .feature-link {
         margin-top: auto;
-
-        color: var(--text);
-
+        color: var(--accent);
         text-decoration: none;
-
         font-size: 14px;
-        font-weight: bold;
+        font-weight: 600;
     }
 
 
@@ -299,29 +443,21 @@
 
     section:not(.hero) {
         max-width: 1200px;
-
         margin: auto;
-
-        padding: 100px 7%;
+        padding: 90px 7%;
     }
 
     .section-label {
-        color: var(--muted);
-
-        font-size: 11px;
-        font-weight: bold;
-
-        letter-spacing: 3px;
-
-        margin-bottom: 15px;
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 14px;
     }
 
     .section-title {
-        font-size: 50px;
-
-        letter-spacing: -3px;
-
-        margin-bottom: 40px;
+        font-size: clamp(32px, 5vw, 46px);
+        letter-spacing: -2px;
+        margin-bottom: 38px;
     }
 
 
@@ -333,40 +469,32 @@
 
     .about-box {
         display: grid;
-
         grid-template-columns: 1fr 1fr;
-
-        gap: 20px;
+        gap: 18px;
     }
 
     .about-card {
         background: var(--card);
-
         border: 1px solid var(--border);
-
         border-radius: 16px;
-
-        padding: 35px;
-
-        transition: 0.3s;
+        padding: 32px;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, background 0.4s ease;
     }
 
     .about-card:hover {
         transform: translateY(-5px);
+        border-color: var(--accent-line);
     }
 
     .about-card h3 {
-        font-size: 22px;
-
-        margin-bottom: 15px;
+        font-size: 20px;
+        margin-bottom: 14px;
     }
 
     .about-card p {
         color: var(--muted);
-
         line-height: 1.7;
-
-        font-size: 15px;
+        font-size: 14.5px;
     }
 
 
@@ -378,79 +506,65 @@
 
     .project-grid {
         display: grid;
-
         grid-template-columns: repeat(3, 1fr);
-
         gap: 15px;
     }
 
     .project {
         position: relative;
-
-        min-height: 280px;
-
-        padding: 28px;
+        min-height: 270px;
+        padding: 26px;
 
         background: var(--card);
-
         border: 1px solid var(--border);
-
         border-radius: 16px;
 
         text-decoration: none;
-
         color: var(--text);
 
-        transition: 0.3s;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, background 0.4s ease;
     }
 
     .project:hover {
-        transform: translateY(-7px);
+        transform: translateY(-6px);
+        border-color: var(--accent-line);
     }
 
     .project-number {
         color: var(--muted);
-
         font-size: 11px;
-
-        font-weight: bold;
+        font-weight: 600;
     }
 
     .project-bottom {
         position: absolute;
-
-        left: 28px;
-        right: 28px;
-        bottom: 28px;
+        left: 26px;
+        right: 26px;
+        bottom: 26px;
     }
 
     .project-icon {
-        font-size: 35px;
-
-        margin-bottom: 15px;
+        font-size: 32px;
+        margin-bottom: 14px;
     }
 
     .project h3 {
-        font-size: 23px;
-
+        font-size: 21px;
         margin-bottom: 8px;
     }
 
     .project p {
         color: var(--muted);
-
         font-size: 13px;
-
-        line-height: 1.5;
+        line-height: 1.55;
     }
 
     .arrow {
         position: absolute;
-
         right: 0;
         bottom: 0;
-
-        font-size: 22px;
+        font-size: 20px;
+        color: var(--accent);
     }
 
 
@@ -458,16 +572,25 @@
 
     footer {
         border-top: 1px solid var(--border);
-
-        padding: 30px 7%;
+        padding: 28px 7%;
 
         display: flex;
-
         justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
 
         color: var(--muted);
-
         font-size: 12px;
+    }
+
+
+    /* TABLET */
+
+    @media (max-width: 1024px) {
+
+        .project-grid {
+            grid-template-columns: 1fr 1fr;
+        }
     }
 
 
@@ -476,25 +599,38 @@
     @media (max-width: 800px) {
 
         nav {
-            padding: 0 5%;
+            padding: 12px 6%;
         }
 
         .nav-right {
-            gap: 15px;
+            gap: 14px;
         }
 
         .hero {
             grid-template-columns: 1fr;
-
-            padding-top: 70px;
+            padding-top: 50px;
+            min-height: auto;
+            gap: 40px;
         }
 
         h1 {
-            letter-spacing: -4px;
+            letter-spacing: -1.5px;
+        }
+
+        .intro {
+            font-size: 15px;
+        }
+
+        section:not(.hero) {
+            padding: 60px 6%;
         }
 
         .about-box {
             grid-template-columns: 1fr;
+        }
+
+        .about-card {
+            padding: 26px;
         }
 
         .project-grid {
@@ -503,8 +639,27 @@
 
         footer {
             flex-direction: column;
+            gap: 8px;
+        }
+    }
 
+    @media (max-width: 420px) {
+
+        .logo {
+            font-size: 17px;
+        }
+
+        .nav-right {
             gap: 10px;
+        }
+
+        .nav-right a {
+            font-size: 13px;
+        }
+
+        .button {
+            padding: 13px 18px;
+            font-size: 13px;
         }
     }
 
@@ -514,12 +669,22 @@
 
 <body>
 
+<div class="cursor-dot"></div>
+<div class="cursor-ring"></div>
+
 <!-- NAVIGATION -->
 
 <nav>
 
     <a href="#" class="logo">
-        LINK<span>BOARD</span>
+        <svg class="logo-mark" width="28" height="28" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="28" height="28" rx="8" stroke="var(--accent)" stroke-width="1.4"/>
+            <path d="M10 22V8" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M10 8H16.5C18.5 8 20 9.5 20 11.3C20 13.1 18.5 14.6 16.5 14.6H10" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 14.6H17.5C19.5 14.6 21 16.1 21 18C21 19.9 19.5 22 17.5 22H10" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="23.5" cy="7" r="2" fill="var(--accent)"/>
+        </svg>
+        building<span>wAI</span>
     </a>
 
     <div class="nav-right">
@@ -535,8 +700,9 @@
         <button
             class="theme-button"
             id="themeButton"
-            onclick="toggleTheme()">
-            ☾
+            onclick="toggleTheme()"
+            aria-label="Toggle light and dark theme">
+            ☀
         </button>
 
     </div>
@@ -551,19 +717,21 @@
     <div>
 
         <div class="label">
-            PERSONAL WEBSITE
+            buildingwAI
         </div>
 
         <h1>
-            Welcome to<br>
-            <span>my website.</span>
+            I build things<br>
+            <span>myself.</span>
         </h1>
 
         <p class="intro">
-            I'm a student interested in technology,
-            programming, and creating things.
-            This website is where I keep some of
-            the projects I have made.
+            I'm a student who likes figuring out how things work,
+            then building my own version. This site is where I keep
+            the projects I've made — starting with a game I built
+            from scratch while learning to code. I write in Python,
+            Java, HTML, and C#. (buildingwAI is just the name of the
+            class this project is for.)
         </p>
 
         <div class="buttons">
@@ -587,7 +755,14 @@
 
     <!-- FEATURED GAME -->
 
-    <div class="feature">
+    <div class="feature-col">
+
+        <div class="status-header reveal">
+            <span class="status-dot"></span>
+            Current Project
+        </div>
+
+    <div class="feature reveal">
 
         <div class="feature-top">
             <span>PROJECT 01</span>
@@ -603,10 +778,9 @@
         </h2>
 
         <p>
-            One of my own creations.
-            I built this game while learning
-            programming and experimenting with
-            interactive projects.
+            One of my own creations, built entirely by me while
+            learning programming and figuring things out along
+            the way.
         </p>
 
         <a
@@ -617,6 +791,8 @@
 
     </div>
 
+    </div>
+
 </section>
 
 
@@ -624,48 +800,46 @@
 
 <section id="about">
 
-    <div class="section-label">
-        ABOUT ME
+    <div class="section-label reveal">
+        About
     </div>
 
-    <h2 class="section-title">
+    <h2 class="section-title reveal">
         Who I am.
     </h2>
 
 
     <div class="about-box">
 
-        <div class="about-card">
+        <div class="about-card reveal">
 
             <h3>
                 A little about me
             </h3>
 
             <p>
-                I'm a student who enjoys technology,
-                computer science, and learning how
-                things work. I like building projects
-                and experimenting with programming
-                to turn ideas into something I can
-                actually use.
+                I'm a student who enjoys technology, programming,
+                and learning how things work. I code in Python,
+                Java, HTML, and C#, and I like building projects
+                from the ground up to turn ideas into something
+                I can actually use.
             </p>
 
         </div>
 
 
-        <div class="about-card">
+        <div class="about-card reveal">
 
             <h3>
                 About this website
             </h3>
 
             <p>
-                I made this website as a place to
-                showcase my own creations. Right now,
-                it includes a game that I built, but
-                I'll continue adding more projects
-                as I create them and improve my
-                programming skills.
+                buildingwAI is where I document what I make — the
+                name comes from the class this project is for.
+                Right now that's a game I built myself, but I'll
+                keep adding projects here as I create them and
+                keep improving as a programmer.
             </p>
 
         </div>
@@ -679,11 +853,11 @@
 
 <section id="projects">
 
-    <div class="section-label">
-        MY WORK
+    <div class="section-label reveal">
+        My Work
     </div>
 
-    <h2 class="section-title">
+    <h2 class="section-title reveal">
         Projects.
     </h2>
 
@@ -695,7 +869,7 @@
 
         <a
             href="games/index.html"
-            class="project">
+            class="project reveal">
 
             <span class="project-number">
                 01
@@ -712,8 +886,8 @@
                 </h3>
 
                 <p>
-                    A game I created while learning
-                    programming and web development.
+                    A game I built myself from scratch while
+                    learning to code.
                 </p>
 
                 <span class="arrow">
@@ -727,7 +901,7 @@
 
         <!-- FUTURE PROJECT -->
 
-        <div class="project">
+        <div class="project reveal">
 
             <span class="project-number">
                 02
@@ -745,7 +919,7 @@
 
                 <p>
                     I'll add another project here
-                    when I create something new.
+                    when I build something new.
                 </p>
 
             </div>
@@ -755,7 +929,7 @@
 
         <!-- FUTURE PROJECT -->
 
-        <div class="project">
+        <div class="project reveal">
 
             <span class="project-number">
                 03
@@ -773,7 +947,7 @@
 
                 <p>
                     This space will be used for
-                    another creation in the future.
+                    another build in the future.
                 </p>
 
             </div>
@@ -791,64 +965,120 @@
 <footer>
 
     <span>
-        © 2026 My Website
+        © 2026 buildingwAI
     </span>
 
     <span>
-        Built with HTML
+        Built by hand, line by line
     </span>
 
 </footer>
 
 
-<!-- DARK / LIGHT MODE -->
-
 <script>
 
-    function toggleTheme() {
+    /* SUBTLE PARALLAX ON THE AMBIENT GLOW */
 
-        document.body.classList.toggle("dark");
-
-        const button =
-            document.getElementById("themeButton");
-
-        if (
-            document.body.classList.contains("dark")
-        ) {
-
-            button.textContent = "☀";
-
-            localStorage.setItem(
-                "theme",
-                "dark"
-            );
-
-        } else {
-
-            button.textContent = "☾";
-
-            localStorage.setItem(
-                "theme",
-                "light"
-            );
-
-        }
-
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    document.body.style.setProperty('--parallax-y', (window.scrollY * 0.06) + 'px');
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
     }
 
 
-    const savedTheme =
-        localStorage.getItem("theme");
+    /* THEME TOGGLE */
+
+    function toggleTheme() {
+        document.body.classList.toggle('light');
+        const button = document.getElementById('themeButton');
+
+        if (document.body.classList.contains('light')) {
+            button.textContent = '☾';
+            localStorage.setItem('theme', 'light');
+        } else {
+            button.textContent = '☀';
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+
+    const savedTheme = localStorage.getItem('theme');
+
+    if (savedTheme === 'light') {
+        document.body.classList.add('light');
+        document.getElementById('themeButton').textContent = '☾';
+    }
 
 
-    if (savedTheme === "dark") {
+    /* CUSTOM CURSOR — desktop / pointer devices only, so touch is untouched */
 
-        document.body.classList.add("dark");
+    if (window.matchMedia('(pointer: fine)').matches) {
 
-        document.getElementById(
-            "themeButton"
-        ).textContent = "☀";
+        document.body.classList.add('has-cursor');
 
+        const dot = document.querySelector('.cursor-dot');
+        const ring = document.querySelector('.cursor-ring');
+
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let ringX = mouseX;
+        let ringY = mouseY;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            dot.style.left = mouseX + 'px';
+            dot.style.top = mouseY + 'px';
+        });
+
+        function animateRing() {
+            ringX += (mouseX - ringX) * 0.16;
+            ringY += (mouseY - ringY) * 0.16;
+            ring.style.left = ringX + 'px';
+            ring.style.top = ringY + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        document.querySelectorAll('a, button').forEach((el) => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('cursor-active'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-active'));
+        });
+    }
+
+
+    /* SCROLL REVEAL */
+
+    const revealEls = document.querySelectorAll('.reveal');
+
+    document.querySelectorAll('.about-box, .project-grid').forEach((group) => {
+        Array.from(group.children).forEach((child, i) => {
+            child.style.transitionDelay = (i * 0.1) + 's';
+        });
+    });
+
+    if ('IntersectionObserver' in window) {
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                } else {
+                    entry.target.classList.remove('in-view');
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+
+        revealEls.forEach((el) => observer.observe(el));
+
+    } else {
+        revealEls.forEach((el) => el.classList.add('in-view'));
     }
 
 </script>
