@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="AP Study Hub — find, organize, and share AP study resources in one place.">
+<meta name="theme-color" content="#3157d5"><title>Login | AP Study Hub</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script defer src="../assets/app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><div class="container nav" role="navigation" aria-label="Main navigation">
+<a class="brand" href="../"><span class="mark" aria-hidden="true">AP</span><strong>AP STUDY HUB <span>· resources</span></strong></a>
+<button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false">☰</button>
+<nav class="navlinks" aria-label="Primary"><a data-nav href="../" class="">Home</a><a data-nav href="../browse/" class="">Browse</a><a data-nav href="../courses/" class="">Courses</a> <a data-nav href="../saved/">Saved</a><a data-nav href="../add/" class="">Add Your Findings</a></nav>
+<div class="nav-actions"><a class="btn btn-primary" href="../login/">Login</a><button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode">◐</button></div>
+</div></header>
+<main id="main" data-login="true"><section class="auth-wrap" data-login><div class="auth"><div class="panel"><h1>Welcome back</h1><p>Sign in to contribute resources to AP Study Hub.</p><div id="formNotice" class="notice hide" role="alert"></div><form id="loginForm"><div class="field"><label for="email">Email</label><input class="input" id="email" type="email" autocomplete="email" required placeholder="you@example.com"></div><div class="field" style="margin-top:14px"><label for="password">Password</label><input class="input" id="password" type="password" autocomplete="current-password" required placeholder="Your password"></div><button class="btn btn-primary" style="width:100%;margin-top:18px" type="submit">Log in</button></form><button class="btn btn-secondary" id="signupBtn" style="width:100%;margin-top:9px">Create account</button><p class="help" style="margin-top:14px">Browsing does not require an account. Supabase Email + Password authentication is used for contributions.</p></div></div></section></main>
+<footer class="footer"><div class="container footer-row"><span>AP Study Hub · Built for students, by students.</span><span>Use the library. Share what helps.</span></div></footer>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body></html>

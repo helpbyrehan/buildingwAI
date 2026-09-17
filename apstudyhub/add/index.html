@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="AP Study Hub — find, organize, and share AP study resources in one place.">
+<meta name="theme-color" content="#3157d5"><title>Add Your Findings | AP Study Hub</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script defer src="../assets/app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><div class="container nav" role="navigation" aria-label="Main navigation">
+<a class="brand" href="../"><span class="mark" aria-hidden="true">AP</span><strong>AP STUDY HUB <span>· resources</span></strong></a>
+<button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false">☰</button>
+<nav class="navlinks" aria-label="Primary"><a data-nav href="../" class="">Home</a><a data-nav href="../browse/" class="">Browse</a><a data-nav href="../courses/" class="">Courses</a> <a data-nav href="../saved/">Saved</a><a data-nav href="../add/" class="active">Add Your Findings</a></nav>
+<div class="nav-actions"><a class="btn btn-primary" href="../login/">Login</a><button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode">◐</button></div>
+</div></header>
+<main id="main" data-add="true"><section class="page-head"><div class="container"><h1>Add Your Findings</h1><p>Found something genuinely useful? Submit it so other students can find it. Contributions go through moderation before becoming public.</p></div></section><section class="section" style="padding-top:10px" data-add><div class="container"><div class="panel"><div id="formNotice" class="notice hide" role="alert"></div><form id="addForm" class="form-grid" novalidate><div class="field"><label for="addSubject">Subject</label><select class="select" id="addSubject" required></select></div><div class="field"><label for="addCourse">Course</label><select class="select" id="addCourse" required></select></div><div class="field"><label for="addYear">Year</label><select class="select" id="addYear"><option value="">Select year</option><option>2026</option><option>2025</option><option>2024</option><option>2023</option><option>2022</option><option>2021</option><option>2020</option></select></div><div class="field"><label for="addUnit">Unit</label><select class="select" id="addUnit"></select><p class="help">Leave this as Full Course if the material covers the whole class.</p></div><div class="field"><label for="resourceType">Resource type</label><select class="select" id="resourceType" required><option value="">Select type</option><option>Study Guide</option><option>Unit Guide</option><option>Notes</option><option>Practice Questions</option><option>Practice Test</option><option>Flashcards</option><option>Formula Sheet</option><option>Review</option><option>Video</option><option>Other</option></select></div><div class="field"><label for="resourceTitle">Title</label><input class="input" id="resourceTitle" maxlength="180" required placeholder="AP Physics 1 Unit 3 Study Guide"></div><div class="field full"><label for="resourceDescription">Description</label><textarea class="textarea" id="resourceDescription" maxlength="2000" placeholder="What does this resource cover? Why is it useful?"></textarea></div><div class="field full"><label>Resource source</label><div class="inline"><label><input type="radio" name="resourceMode" value="file" checked> Upload PDF</label><label><input type="radio" name="resourceMode" value="link"> External link</label></div></div><div class="field full" id="fileBox"><div class="dropzone"><label class="btn btn-secondary" for="resourceFile">Choose PDF</label><input id="resourceFile" type="file" accept="application/pdf"><p class="help" id="fileHelp">PDF only · maximum 25 MB</p></div></div><div class="field full hide" id="linkBox"><label for="externalUrl">External URL</label><input class="input" id="externalUrl" type="url" placeholder="https://example.com/resource"></div><div class="full inline" style="justify-content:flex-end"><button class="btn btn-primary" type="submit">Submit Resource</button></div></form></div></div></section></main>
+<footer class="footer"><div class="container footer-row"><span>AP Study Hub · Built for students, by students.</span><span>Use the library. Share what helps.</span></div></footer>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body></html>

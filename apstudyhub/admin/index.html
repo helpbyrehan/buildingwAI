@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="AP Study Hub — find, organize, and share AP study resources in one place.">
+<meta name="theme-color" content="#3157d5"><title>Admin Dashboard | AP Study Hub</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script defer src="../assets/app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><div class="container nav" role="navigation" aria-label="Main navigation">
+<a class="brand" href="../"><span class="mark" aria-hidden="true">AP</span><strong>AP STUDY HUB <span>· resources</span></strong></a>
+<button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false">☰</button>
+<nav class="navlinks" aria-label="Primary"><a data-nav href="../" class="">Home</a><a data-nav href="../browse/" class="">Browse</a><a data-nav href="../courses/" class="">Courses</a> <a data-nav href="../saved/">Saved</a><a data-nav href="../add/" class="">Add Your Findings</a></nav>
+<div class="nav-actions"><a class="btn btn-primary" href="../login/">Login</a><button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode">◐</button></div>
+</div></header>
+<main id="main" data-admin="true"><section class="page-head"><div class="container"><h1>Admin Dashboard</h1><p>Review pending contributions and manage resource status.</p></div></section><section class="section" style="padding-top:10px" data-admin><div class="container"><div class="panel" id="adminPanel"><div class="loading">Checking admin access…</div></div></div></section></main>
+<footer class="footer"><div class="container footer-row"><span>AP Study Hub · Built for students, by students.</span><span>Use the library. Share what helps.</span></div></footer>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body></html>
