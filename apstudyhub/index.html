@@ -1,73 +1,32 @@
-<!doctype html>
-<html lang="en" data-theme="dark">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="AP Study Hub — find, organize, and share AP study resources in one place.">
-<meta name="theme-color" content="#07090b">
-<title>Home | AP Study Hub</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='30' rx='8' fill='%2307090b'/%3E%3Cpath d='M7 11c3.3-1.7 6.7-1.7 8 0v11.5c-1.3-1.7-4.7-1.7-8 0V11z' fill='none' stroke='%236f9bc4' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M23 11c-3.3-1.7-6.7-1.7-8 0v11.5c1.3-1.7 4.7-1.7 8 0V11z' fill='none' stroke='%236f9bc4' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="./assets/styles.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>window.APSH_BASE='./';</script>
-<script src="./assets/config.js"></script>
-<script defer src="./assets/app.js"></script>
-</head>
-<body>
-<a class="skip" href="#main">Skip to content</a>
-<header class="topbar"><div class="container nav" role="navigation" aria-label="Main navigation">
-<a class="brand" href="./">
-<svg class="mark" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-<rect x="1" y="1" width="34" height="34" rx="10" fill="var(--surface)" stroke="var(--border)" stroke-width="1.4"/>
-<path d="M8 12.3c4-2 8-2 10 0v13.4c-2-2-6-2-10 0V12.3z" fill="none" stroke="var(--primary)" stroke-width="1.6" stroke-linejoin="round"/>
-<path d="M28 12.3c-4-2-8-2-10 0v13.4c2-2 6-2 10 0V12.3z" fill="none" stroke="var(--primary)" stroke-width="1.6" stroke-linejoin="round"/>
-</svg>
-<strong>AP STUDY HUB <span>· resources</span></strong></a>
+<!doctype html><html lang="en" data-theme="dark"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A minimal AP resource library for finding, saving, and sharing useful study materials."><meta name="theme-color" content="#07090b"><title>Home | AP Study Hub</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='30' rx='8' fill='%2307090b'/%3E%3Cpath d='M7 11c3.3-1.7 6.7-1.7 8 0v11.5c-1.3-1.7-4.7-1.7-8 0V11z' fill='none' stroke='%236f9bc4' stroke-width='1.6'/%3E%3Cpath d='M23 11c-3.3-1.7-6.7-1.7-8 0v11.5c3.3-1.7 6.7-1.7 8 0V11z' fill='none' stroke='%236f9bc4' stroke-width='1.6'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="./assets/styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>window.APSH_BASE='./';</script><script src="./assets/config.js"></script><script defer src="./assets/app.js"></script></head>
+<body><a class="skip" href="#main">Skip to content</a><header class="topbar"><div class="container nav"><a class="brand" href="./"><svg class="mark" viewBox="0 0 36 36" aria-hidden="true"><rect x="1" y="1" width="34" height="34" rx="10" fill="var(--surface)" stroke="var(--border)"/><path d="M8 12c4-2 8-2 10 0v14c-2-2-6-2-10 0V12zM28 12c-4-2-8-2-10 0v14c2-2 6-2 10 0V12z" fill="none" stroke="var(--accent)" stroke-width="1.6"/></svg><strong>AP STUDY HUB <span>· resources</span></strong></a>
 <button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false">☰</button>
-<nav class="navlinks" aria-label="Primary"><a data-nav href="./" class="active">Home</a><a data-nav href="./browse/">Browse</a><a data-nav href="./courses/">Courses</a><a data-nav href="./saved/">Saved</a><a data-nav href="./add/">Add Your Findings</a><a data-nav href="./about/">About</a></nav>
-<div class="nav-actions"><span data-user-slot></span><button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode">☀</button></div>
-</div></header>
-
+<nav class="navlinks" aria-label="Primary"><a data-nav href="./browse/" class="">Search</a><a data-nav href="./courses/" class="">Courses</a><a data-nav href="./saved/" class="">Saved</a><a data-nav href="./add/" class="">Add</a></nav>
+<div class="nav-actions"><span data-user-slot></span><button class="icon-btn" id="themeBtn" aria-label="Toggle theme">☼</button></div></div></header>
 <main id="main" data-home="true">
-<section class="hero" data-home>
-<div class="container hero-grid">
-<div>
-<div class="status-header reveal"><span class="status-dot"></span><span id="statusText">Live · community-submitted resources</span></div>
-<span class="eyebrow reveal">A community-powered AP resource library</span>
-<h1 class="reveal">Find the resources<br>you <em>actually need.</em></h1>
-<p class="reveal">Search AP study guides, unit reviews, notes, practice materials, and useful links — all organized by course and unit, in one place.</p>
-<div class="searchbox reveal"><input data-global-search aria-label="Search AP resources" placeholder="Search AP resources…"><button class="btn btn-primary" onclick="location.href='browse/'">Search Resources</button></div>
-<div class="inline reveal" style="margin-top:16px"><a class="btn btn-secondary" href="browse/">Browse Resources</a><a class="btn btn-ghost" href="courses/">Browse Courses →</a><a class="btn btn-ghost" href="saved/">Saved</a></div>
-</div>
-<div class="hero-card reveal">
-<h3>One library. Less digging.</h3>
-<p class="muted">Go from course to unit to resource without hunting through random links and folders.</p>
-<div class="stat-grid">
-<div class="stat"><b data-stat-courses>—</b><span>AP courses</span></div>
-<div class="stat"><b data-stat-resources>—</b><span>approved resources</span></div>
-<div class="stat"><b>PDFs</b><span>and external links</span></div>
-<div class="stat"><b>Community</b><span>student contributions</span></div>
-</div>
-</div>
-</div>
-</section>
-
-<section class="section">
-<div class="container">
-<div class="section-head reveal"><div><h2>Browse courses</h2><p>Jump straight into an AP class.</p></div><a class="btn btn-secondary" href="courses/">View all courses</a></div>
-<div class="grid" data-courses><div class="loading">Loading courses…</div></div>
-</div>
-</section>
-
-<section class="section">
-<div class="container">
-<div class="section-head reveal"><div><h2>Featured resources</h2><p>Approved materials highlighted by administrators.</p></div><a class="btn btn-secondary" href="browse/">Browse everything</a></div>
-<div class="resource-grid" data-featured><div class="loading">Loading resources…</div></div>
-</div>
-</section>
-</main>
-
-<footer class="footer"><div class="container footer-row"><span>AP Study Hub · Built for students, by students.</span><span>Use the library. Share what helps.</span></div></footer>
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
-</body></html>
+<section class="hero"><div class="container hero-inner">
+<div class="hero-kicker reveal"><span class="pulse"></span><span class="eyebrow">AP resource library</span></div>
+<h1 class="reveal">Study less.<br>Find <em>better.</em></h1>
+<p class="hero-copy reveal">A focused place to find the AP resources you actually need. Search by course, unit, or topic.</p>
+<div class="hero-search reveal"><input data-global-search aria-label="Search AP resources" placeholder="Search physics, psych, calculus…"><button class="btn btn-primary" onclick="location.href='browse/'">Search</button></div>
+<div class="home-actions reveal"><a class="btn btn-secondary" href="browse/">Browse resources</a><a class="btn btn-ghost" href="signup/">Create an account →</a><a class="skip-link" href="browse/">Continue without an account</a></div>
+</div></section>
+<section class="home-strip"><div class="container strip-grid">
+<div class="strip-item reveal"><strong data-stat-courses>—</strong><span>AP courses</span></div>
+<div class="strip-item reveal"><strong data-stat-resources>—</strong><span>approved resources</span></div>
+<div class="strip-item reveal"><strong>Student-built</strong><span>community contributions, moderated</span></div>
+</div></section>
+<section class="section"><div class="container">
+<div class="section-head reveal"><div><div class="eyebrow">Explore</div><h2>Courses</h2></div><a class="btn btn-secondary" href="courses/">All courses</a></div>
+<div class="grid" data-courses><div class="loading">Loading…</div></div>
+</div></section>
+<section class="section"><div class="container">
+<div class="section-head reveal"><div><div class="eyebrow">Fresh</div><h2>Featured</h2></div><a class="btn btn-secondary" href="browse/">Browse all</a></div>
+<div class="resource-grid" data-featured><div class="loading">Loading…</div></div>
+</div></section>
+</main><footer class="footer"><div class="container footer-row"><span>AP Study Hub · Built for students, by students.</span><span>Search. Save. Share.</span></div></footer><div id="toast" class="toast" role="status" aria-live="polite"></div></body></html>

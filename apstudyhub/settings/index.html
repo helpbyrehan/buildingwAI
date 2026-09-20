@@ -1,18 +1,17 @@
 <!doctype html><html lang="en" data-theme="dark"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Find AP resources by course, unit, topic, year, or type."><meta name="theme-color" content="#07090b"><title>Search | AP Study Hub</title>
+<meta name="description" content="Manage your AP Study Hub account settings."><meta name="theme-color" content="#07090b"><title>Settings | AP Study Hub</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='30' rx='8' fill='%2307090b'/%3E%3Cpath d='M7 11c3.3-1.7 6.7-1.7 8 0v11.5c-1.3-1.7-4.7-1.7-8 0V11z' fill='none' stroke='%236f9bc4' stroke-width='1.6'/%3E%3Cpath d='M23 11c-3.3-1.7-6.7-1.7-8 0v11.5c3.3-1.7 6.7-1.7 8 0V11z' fill='none' stroke='%236f9bc4' stroke-width='1.6'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="../assets/styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.APSH_BASE='../';</script><script src="../assets/config.js"></script><script defer src="../assets/app.js"></script></head><body><a class="skip" href="#main">Skip to content</a><header class="topbar"><div class="container nav"><a class="brand" href="../"><svg class="mark" viewBox="0 0 36 36" aria-hidden="true"><rect x="1" y="1" width="34" height="34" rx="10" fill="var(--surface)" stroke="var(--border)"/><path d="M8 12c4-2 8-2 10 0v14c-2-2-6-2-10 0V12zM28 12c-4-2-8-2-10 0v14c2-2 6-2 10 0V12z" fill="none" stroke="var(--accent)" stroke-width="1.6"/></svg><strong>AP STUDY HUB <span>· resources</span></strong></a>
 <button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false">☰</button>
-<nav class="navlinks" aria-label="Primary"><a data-nav href="../browse/" class="active">Search</a><a data-nav href="../courses/" class="">Courses</a><a data-nav href="../saved/" class="">Saved</a><a data-nav href="../add/" class="">Add</a></nav>
+<nav class="navlinks" aria-label="Primary"><a data-nav href="../browse/" class="">Search</a><a data-nav href="../courses/" class="">Courses</a><a data-nav href="../saved/" class="">Saved</a><a data-nav href="../add/" class="">Add</a></nav>
 <div class="nav-actions"><span data-user-slot></span><button class="icon-btn" id="themeBtn" aria-label="Toggle theme">☼</button></div></div></header>
-<main id="main" data-browse="true">
-<section class="search-hero"><div class="container"><div class="eyebrow reveal">Search the library</div><h1 class="page-head reveal" style="padding:10px 0 18px">Find what you need.</h1>
-<div class="search-large reveal"><input id="browseSearch" aria-label="Search resources" placeholder="Try “psych”, “physics”, “kinematics”, or “calc”"><button class="btn btn-primary" id="searchButton">Search</button></div></div></section>
-<section class="section" style="padding-top:12px"><div class="container">
-<div class="toolbar reveal">
-<div class="filter"><label>Subject</label><select class="select" id="filterSubject"></select></div><div class="filter"><label>Course</label><select class="select" id="filterCourse"></select></div><div class="filter"><label>Year</label><select class="select" id="filterYear"></select></div><div class="filter"><label>Type</label><select class="select" id="filterType"></select></div><div class="filter"><label>Sort</label><select class="select" id="filterSort"><option value="featured">Relevant</option><option value="title">A–Z</option><option value="oldest">Oldest</option></select></div>
-</div><div class="inline reveal" style="margin-bottom:18px"><strong id="resultCount">Loading…</strong><span class="muted small">Approved resources only</span></div>
-<div class="resource-grid" data-browse-list><div class="loading">Loading…</div></div>
+<main id="main" data-settings="true"><section class="page-head"><div class="container"><div class="eyebrow">Account</div><h1>Settings.</h1><p>Small changes, your way.</p></div></section>
+<section class="section"><div class="container" style="max-width:800px">
+<div class="panel reveal"><div class="eyebrow">Profile</div><h2>Display name</h2><p class="muted small">This is what AP Study Hub calls you.</p><div id="formNotice" class="notice hide" role="alert"></div>
+<form id="profileForm"><div class="field"><label>Name</label><input class="input" id="settingsName" maxlength="30" required></div><button class="btn btn-primary" style="margin-top:14px">Save name</button></form>
+<div class="field" style="margin-top:22px"><label>Email</label><input class="input" id="settingsEmail" readonly></div></div>
+<div class="panel reveal" style="margin-top:14px"><div class="eyebrow">Security</div><h2>Password</h2><form id="passwordForm"><div class="field"><label>New password</label><input class="input" id="newPassword" type="password" minlength="8" required></div><button class="btn btn-secondary" style="margin-top:14px">Change password</button></form></div>
+<div class="panel reveal" style="margin-top:14px"><div class="eyebrow">Account</div><h2>Delete account</h2><p class="muted small">This removes your account and your uploaded resources. This cannot be undone.</p><button class="btn btn-danger" id="deleteAccount">Delete my account</button></div>
 </div></section></main><footer class="footer"><div class="container footer-row"><span>AP Study Hub · Built for students, by students.</span><span>Search. Save. Share.</span></div></footer><div id="toast" class="toast" role="status" aria-live="polite"></div></body></html>

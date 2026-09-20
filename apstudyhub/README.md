@@ -1,73 +1,99 @@
 # AP Study Hub
 
-A static, GitHub Pages-compatible frontend for AP Study Hub — redesigned with a dark, editorial theme (Space Grotesk + Inter, a single accent blue, ambient glow background, scroll-reveal animations, and a custom cursor on desktop) to match the rest of the buildingwAI site. All Supabase wiring, demo data, and page logic from the original build are preserved.
+A production-oriented AP resource library frontend for GitHub Pages + Supabase.
 
-## Files
+## Design
 
-- `index.html` — homepage
-- `browse/index.html` — search + filters
-- `courses/index.html` — course directory
-- `course/index.html?slug=...` — course detail page
-- `resource/index.html?id=...` — resource detail / PDF viewer
-- `add/index.html` — authenticated resource submission
-- `login/index.html` — Supabase email/password login
-- `admin/index.html` — admin moderation UI
-- `about/index.html` — about page
-- `saved/index.html` — resources saved locally in the browser
-- `assets/styles.css` — shared theme + responsive styling
-- `assets/app.js` — shared application logic (data, rendering, auth, theme, reveal animation, cursor)
-- `assets/config.js` — Supabase project configuration
+The interface uses a minimal editorial direction: oversized typography, strong whitespace, short copy, subtle motion, dark/light themes, and separate focused pages rather than putting the entire product on the homepage.
 
-## What changed in this pass
+## Main pages
 
-- Full visual redesign to match buildingwAI: dark navy background with a soft ambient glow, `--primary` accent blue, Space Grotesk headings / Inter body text, pill-style nav with an underline on the active link, and a small open-book logo mark.
-- Light mode is still available via the theme toggle, now default to dark on first visit.
-- Added scroll-reveal animation on cards and page sections, and a custom two-part cursor on pointer devices (both respect `prefers-reduced-motion` and touch devices are untouched).
-- Added a resource-type icon (📘 📝 🧪 etc.) to resource cards.
-- `about/` is more substantial: a "how it works" lifecycle section was added.
-- `saved/index.html` now hooks into the shared `assets/app.js` (`savedPage()`) instead of carrying its own inline script, so it stays in sync with the rest of the app.
-- No changes to data shape, Supabase calls, demo data, or page routing — everything documented below still applies as-is.
+- `/` — landing page + search entry
+- `/browse/` — intelligent search and filters
+- `/courses/` — AP course directory
+- `/course/?slug=...` — course library
+- `/resource/?id=...` — resource viewer
+- `/saved/` — authenticated saved resources
+- `/add/` — authenticated submissions
+- `/login/` — login
+- `/signup/` — signup + display name
+- `/profile/` — profile + uploads
+- `/settings/` — display name, password, account deletion
+- `/admin/` — admin moderation
+- `/about/` — short product explanation
 
-## Connect Supabase
+## Account behavior
 
-Open `assets/config.js` and replace:
+Signup asks for a display name. That name is used throughout the interface instead of exposing the user's email.
 
-- `YOUR_SUPABASE_URL`
-- `YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY`
+The profile menu provides:
 
-Keep `DEMO_MODE: true` while testing the UI without a database. Set `DEMO_MODE: false` after your tables, RLS, Auth, and Storage are ready.
+- Profile
+- Saved
+- My uploads
+- Settings
+- Admin (admins only)
+- Log out
 
-Never put a Supabase service-role key in frontend code.
+Saved resources are account-based and persist across devices.
 
-## Expected tables
+Users can remove their own uploads. Database RLS prevents users from modifying another user's account or resources.
 
-The frontend expects the MVP tables:
+## Search
 
-- `subjects`
-- `courses`
-- `resources`
-- `profiles`
+Search normalizes capitalization and punctuation and understands common AP abbreviations such as:
 
-Expected resource fields include title, slug, description, subject_id, course_id, year, unit_number, unit_name, resource_type, file_path, file_name, file_size, mime_type, external_url, submitted_by, status, featured, view_count, download_count, created_at, updated_at.
+- psych
+- physics / phys
+- calc
+- chem
+- bio
+- csa / csp
+- stats
+- apush
+- world
+- euro
+- gov
+- macro / micro
+- lang / lit
+- seminar / research
+- precalc
 
-The app works with integer IDs (`int8`) as long as foreign-key columns use the matching type.
+Results are relevance-ranked by title, course, subject, unit, resource type, and text.
 
-## Storage
+## Security
 
-Expected bucket: `ap-resources`.
+Run `schema.sql` in the Supabase SQL Editor.
 
-Uploaded PDFs use a path similar to:
+The SQL adds:
 
-`pending/<auth-user-id>/<timestamp>-<filename>.pdf`
+- profile display names
+- student/admin roles
+- saved resources
+- signup profile trigger
+- account deletion RPC
+- Row Level Security
+- private pending uploads
+- a separate public bucket for approved resources
+- admin-only publishing/deletion of public files
 
-For production, use Storage RLS policies that permit authenticated contributors to upload only where appropriate and permit approved resources to be opened safely.
+Never put a Supabase service-role key in `assets/config.js`.
 
-## GitHub Pages
+## Supabase configuration
 
-Upload the whole folder contents to the repository root. Do not upload only the root `index.html`; the nested page folders and `assets` directory are required.
+`assets/config.js` contains only the browser-safe Supabase URL and publishable key, plus bucket names.
 
-Because the links are relative, the site works from a GitHub Pages repository URL such as `username.github.io/repository-name/`.
+The expected buckets are:
 
-## Important backend note
+- `ap-resources` — private pending uploads
+- `ap-public-resources` — public approved PDFs
 
-RLS is part of the security model. Public browsing should expose only `resources.status = 'approved'`. Authenticated users should be able to submit their own pending resources. Admin authorization must be enforced by Supabase policies/server-side checks, not just by hiding an admin link in the frontend.
+The admin workflow moves approved PDFs from the private bucket into the public bucket.
+
+## Important
+
+The frontend cannot make database security safe by itself. RLS and Storage policies are required.
+
+After running `schema.sql`, create your own account and use the commented admin SQL statement at the bottom of the file to assign yourself the admin role.
+
+Before launch, test account isolation, uploads, deletion, moderation, password reset, mobile layouts, invalid URLs/files, empty results, and failed network requests.

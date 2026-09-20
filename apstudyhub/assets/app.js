@@ -1,99 +1,246 @@
 (function(){
 'use strict';
 const CFG=window.AP_STUDY_HUB_CONFIG||{};
-const hasConfig=CFG.SUPABASE_URL&&CFG.SUPABASE_KEY&&!String(CFG.SUPABASE_URL).includes('YOUR_')&&!String(CFG.SUPABASE_KEY).includes('YOUR_');
-let sb=null, user=null, profile=null;
-const demo={
- subjects:[
-  {id:1,name:'Science',slug:'science',description:'AP science courses and study materials.'},
-  {id:2,name:'Mathematics',slug:'mathematics',description:'AP mathematics courses and study materials.'},
-  {id:3,name:'Computer Science',slug:'computer-science',description:'AP computing courses and study materials.'},
-  {id:4,name:'History & Social Science',slug:'history-social-science',description:'AP history and social science courses.'},
-  {id:5,name:'English',slug:'english',description:'AP English courses and resources.'}
- ],
- courses:[
-  {id:101,subject_id:1,name:'AP Biology',slug:'ap-biology',description:'Biology concepts, review, and practice.'},
-  {id:102,subject_id:1,name:'AP Chemistry',slug:'ap-chemistry',description:'Chemistry notes, guides, and practice.'},
-  {id:103,subject_id:1,name:'AP Physics 1',slug:'ap-physics-1',description:'Algebra-based AP Physics 1 resources.'},
-  {id:104,subject_id:1,name:'AP Physics 2',slug:'ap-physics-2',description:'AP Physics 2 resources.'},
-  {id:201,subject_id:2,name:'AP Calculus AB',slug:'ap-calculus-ab',description:'Calculus AB notes, reviews, and practice.'},
-  {id:202,subject_id:2,name:'AP Calculus BC',slug:'ap-calculus-bc',description:'Calculus BC resources.'},
-  {id:203,subject_id:2,name:'AP Statistics',slug:'ap-statistics',description:'Statistics notes and practice.'},
-  {id:301,subject_id:3,name:'AP Computer Science A',slug:'ap-computer-science-a',description:'Java programming and AP CSA resources.'},
-  {id:302,subject_id:3,name:'AP Computer Science Principles',slug:'ap-computer-science-principles',description:'AP CSP resources.'},
-  {id:401,subject_id:4,name:'AP World History: Modern',slug:'ap-world-history-modern',description:'AP World History resources.'},
-  {id:402,subject_id:4,name:'AP U.S. History',slug:'ap-us-history',description:'AP U.S. History resources.'},
-  {id:501,subject_id:5,name:'AP English Language and Composition',slug:'ap-english-language-and-composition',description:'Rhetoric, writing, and reading resources.'}
- ],
- resources:[
-  {id:9001,title:'AP Physics 1 Unit 3 Study Guide',slug:'ap-physics-1-unit-3-study-guide',description:'A review guide covering the major concepts and equations from Unit 3.',subject_id:1,course_id:103,year:2026,unit_number:3,unit_name:'Circular Motion and Gravitation',resource_type:'Study Guide',status:'approved',featured:true,submitted_by:null,created_at:'2026-09-01T12:00:00Z'},
-  {id:9002,title:'AP Calculus AB Complete Formula Sheet',slug:'ap-calculus-ab-complete-formula-sheet',description:'A concise formula reference for the major AP Calculus AB topics.',subject_id:2,course_id:201,year:2026,unit_number:null,unit_name:null,resource_type:'Formula Sheet',status:'approved',featured:true,submitted_by:null,created_at:'2026-08-22T12:00:00Z'},
-  {id:9003,title:'AP Chemistry Equilibrium Review',slug:'ap-chemistry-equilibrium-review',description:'Practice and review material for equilibrium concepts.',subject_id:1,course_id:102,year:2025,unit_number:7,unit_name:'Equilibrium',resource_type:'Review',status:'approved',featured:false,submitted_by:null,created_at:'2026-08-10T12:00:00Z'},
-  {id:9004,title:'AP Biology Unit 5 Notes',slug:'ap-biology-unit-5-notes',description:'Organized notes for AP Biology Unit 5.',subject_id:1,course_id:101,year:2026,unit_number:5,unit_name:'Heredity',resource_type:'Notes',status:'approved',featured:false,submitted_by:null,created_at:'2026-08-05T12:00:00Z'},
-  {id:9005,title:'AP CSP Study Guide',slug:'ap-csp-study-guide',description:'A broad review guide for AP Computer Science Principles.',subject_id:3,course_id:302,year:2026,unit_number:null,unit_name:null,resource_type:'Study Guide',status:'approved',featured:false,submitted_by:null,created_at:'2026-07-20T12:00:00Z'}
- ]
+const hasConfig=!!(CFG.SUPABASE_URL&&CFG.SUPABASE_KEY&&!String(CFG.SUPABASE_URL).includes('YOUR_')&&!String(CFG.SUPABASE_KEY).includes('YOUR_'));
+let sb=null,user=null,profile=null;
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const slugify=v=>String(v||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,100);
+const baseHref=()=>window.APSH_BASE||'./';
+const path=()=>location.pathname.replace(/\\/g,'/');
+
+const emptyData={subjects:[],courses:[],resources:[]};
+const aliases={
+ psych:['ap psychology','psychology','psych'],physics:['ap physics','physics','phys'],calc:['calculus','ap calculus','calculus ab','calculus bc'],
+ chemistry:['chemistry','chem','ap chemistry'],bio:['biology','biol','ap biology'],cs:['computer science','ap cs','cs'],
+ csa:['computer science a','ap csa','csa'],csp:['computer science principles','ap csp','csp'],stats:['statistics','stats','ap stats'],
+ gov:['government','us government','ap gov'],macro:['macroeconomics','macro','ap macro'],micro:['microeconomics','micro','ap micro'],
+ apush:['ap us history','apush','us history'],world:['world history','ap world','world'],euro:['european history','ap euro','euro'],
+ lang:['english language','lang','ap lang'],lit:['english literature','lit','ap lit'],seminar:['ap seminar','seminar'],research:['ap research','research'],precalc:['precalculus','precalc','ap precalculus']
 };
-const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-function slugify(v){return String(v||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
-function theme(){const t=localStorage.getItem('apsh-theme')||'dark';document.documentElement.dataset.theme=t;const btn=$('#themeBtn');if(btn)btn.textContent=t==='dark'?'☀':'◐';return t;}
-function toggleTheme(){const t=theme()==='dark'?'light':'dark';localStorage.setItem('apsh-theme',t);document.documentElement.dataset.theme=t;const btn=$('#themeBtn');if(btn)btn.textContent=t==='dark'?'☀':'◐';toast(t==='dark'?'Dark mode enabled':'Light mode enabled');}
-function toast(msg){let t=$('#toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';document.body.appendChild(t)}t.textContent=msg;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),2800);}
-function getPath(){return location.pathname.replace(/\\/g,'/');}
-function isDemo(){return !hasConfig||CFG.DEMO_MODE===true;}
-async function initSupabase(){if(!hasConfig||!window.supabase)return;sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_KEY);const r=await sb.auth.getUser();user=r.data.user||null;if(user){const p=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();profile=p.data||null;} }
-async function data(){if(isDemo())return demo;if(!sb)return demo;const [s,c,r]=await Promise.all([sb.from('subjects').select('*').order('name'),sb.from('courses').select('*').order('name'),sb.from('resources').select('*, subjects(name,slug), courses(name,slug)').eq('status','approved').order('created_at',{ascending:false})]);if(s.error||c.error||r.error){console.warn(s.error||c.error||r.error);return demo}return {subjects:s.data||[],courses:c.data||[],resources:r.data||[]};}
-function currentCourse(list,slug){return list.find(x=>x.slug===slug||String(x.id)===String(slug));}
-function courseFor(courses,id){return courses.find(c=>String(c.id)===String(id));}
-function subjectFor(subjects,id){return subjects.find(s=>String(s.id)===String(id));}
-function saved(){try{return JSON.parse(localStorage.getItem('apsh-saved')||'[]')}catch{return[]}}
-function isSaved(id){return saved().map(String).includes(String(id))}
-function toggleSave(id){let a=saved();const i=a.map(String).indexOf(String(id));if(i>=0){a.splice(i,1);toast('Removed from saved resources')}else{a.unshift(id);toast('Saved resource')}localStorage.setItem('apsh-saved',JSON.stringify(a));renderAllCards();}
-const TYPE_ICON={'Study Guide':'📘','Unit Guide':'📗','Notes':'📝','Practice Questions':'❓','Practice Test':'🧪','Flashcards':'🗂️','Formula Sheet':'📐','Review':'🔎','Video':'🎬','Other':'📄'};
-function baseHref(){return window.APSH_BASE||'./';}
-function resourceCard(r,d){const c=r.courses||courseFor(d.courses,r.course_id);const s=r.subjects||subjectFor(d.subjects,r.subject_id);const unit=r.unit_number?`Unit ${esc(r.unit_number)}${r.unit_name?' · '+esc(r.unit_name):''}`:'Full Course';const base=baseHref();const icon=TYPE_ICON[r.resource_type]||'📄';return `<article class="resource-card reveal"><div class="resource-top"><span class="resource-type">${icon} ${esc(r.resource_type||'Resource')}</span><button class="save ${isSaved(r.id)?'saved':''}" aria-label="${isSaved(r.id)?'Remove saved resource':'Save resource'}" data-save="${esc(r.id)}">${isSaved(r.id)?'★':'☆'}</button></div><h3>${esc(r.title)}</h3><p>${esc(r.description||'No description provided.')}</p><div class="chips"><span class="chip">${esc(c?.name||'Course')}</span><span class="chip">${esc(unit)}</span>${r.year?`<span class="chip">${esc(r.year)}</span>`:''}</div><div class="resource-meta"><span>${esc(s?.name||'')}</span><span>${r.featured?'★ Featured':''}</span></div><div class="resource-actions"><a class="btn btn-primary" href="${base}resource/?id=${encodeURIComponent(r.id)}">View Resource</a></div></article>`;}
-function wireCards(){ $$('[data-save]').forEach(b=>b.onclick=()=>toggleSave(b.dataset.save)); observeReveals();}
-function renderAllCards(){ $$('[data-resource-list]').forEach(el=>{const d=window.APSH_DATA||demo;const ids=[...el.querySelectorAll('[data-resource-id]')].map(x=>x.dataset.resourceId); if(ids.length)el.innerHTML=d.resources.filter(r=>ids.includes(String(r.id))).map(r=>resourceCard(r,d)).join('');wireCards();}); }
-function nav(){const path=getPath();const onHome=!!$('[data-home]');$$('[data-nav]').forEach(a=>{const href=a.getAttribute('href')||'';if(href==='./'||href==='../'){a.classList.toggle('active',onHome);return}const seg=href.replace(/^\.\.?\//,'').replace(/\/$/,'');a.classList.toggle('active',!!seg&&path.includes('/'+seg+'/'))});const menu=$('#menuBtn'),navEl=$('.nav');if(menu&&navEl)menu.onclick=()=>{const open=navEl.classList.toggle('open');menu.setAttribute('aria-expanded',String(open))};const th=$('#themeBtn');if(th)th.onclick=toggleTheme;}
-function wireSearch(){ $$('[data-global-search]').forEach(inp=>inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const q=inp.value.trim();location.href=(getPath().includes('/browse/')?'./':'browse/')+(q?'?q='+encodeURIComponent(q):'')}}));}
-function layout(){nav();wireSearch();initCursor();}
-
-/* ---- scroll reveal ---- */
-let revealObserver=null;
+function normalizeQuery(q){return q.toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim()}
+function queryTerms(q){const n=normalizeQuery(q),out=[n];Object.entries(aliases).forEach(([key,vals])=>{if(vals.some(v=>v===n||v.startsWith(n)&&n.length>=3)||key===n)out.push(...vals)});return [...new Set(out.filter(Boolean))]}
+function theme(){const t=localStorage.getItem('apsh-theme')||'dark';document.documentElement.dataset.theme=t;const b=$('#themeBtn');if(b)b.textContent=t==='dark'?'☼':'◐'}
+function toggleTheme(){const t=(localStorage.getItem('apsh-theme')||'dark')==='dark'?'light':'dark';localStorage.setItem('apsh-theme',t);theme();toast(t==='dark'?'Dark mode enabled':'Light mode enabled')}
+function toast(msg){let t=$('#toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';document.body.append(t)}t.textContent=msg;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),2600)}
+async function initSupabase(){
+ if(!hasConfig||!window.supabase)return;
+ sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_KEY);
+ const r=await sb.auth.getUser();user=r.data.user||null;
+ if(user){const p=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();profile=p.data||null}
+}
+async function data(){
+ if(!sb)return emptyData;
+ const [s,c,r]=await Promise.all([
+  sb.from('subjects').select('*').order('name'),
+  sb.from('courses').select('*').order('name'),
+  sb.from('resources').select('*, subjects(name,slug), courses(name,slug)').eq('status','approved').order('created_at',{ascending:false})
+ ]);
+ if(s.error||c.error||r.error){console.warn(s.error||c.error||r.error);return {subjects:s.data||[],courses:c.data||[],resources:r.data||[]}}
+ return {subjects:s.data||[],courses:c.data||[],resources:r.data||[]}
+}
+const courseFor=(cs,id)=>cs.find(c=>String(c.id)===String(id));
+const subjectFor=(ss,id)=>ss.find(s=>String(s.id)===String(id));
+function initials(name){return (String(name||'Student').trim().split(/\s+/).map(x=>x[0]).join('').slice(0,2)||'S').toUpperCase()}
+function profileName(){return profile?.display_name||user?.user_metadata?.display_name||'Student'}
+function resourceCard(r,d){
+ const c=r.courses||courseFor(d.courses,r.course_id),s=r.subjects||subjectFor(d.subjects,r.subject_id);
+ const unit=r.unit_number?`Unit ${esc(r.unit_number)}${r.unit_name?' · '+esc(r.unit_name):''}`:'Full Course';
+ return `<article class="resource-card reveal">
+  <div class="resource-top"><span class="resource-type">${esc(r.resource_type||'Resource')}</span><button class="save" data-save="${esc(r.id)}" aria-label="Save resource">☆</button></div>
+  <h3>${esc(r.title)}</h3><p>${esc(r.description||'No description.')}</p>
+  <div class="chips"><span class="chip">${esc(c?.name||'Course')}</span><span class="chip">${esc(unit)}</span>${r.year?`<span class="chip">${esc(r.year)}</span>`:''}</div>
+  <div class="resource-meta"><span>${esc(s?.name||'')}</span>${r.featured?'<span>Featured</span>':''}</div>
+  <div class="resource-actions"><a class="btn btn-primary" href="${baseHref()}resource/?id=${encodeURIComponent(r.id)}">Open</a></div>
+ </article>`
+}
+async function savedIds(){
+ if(user&&sb){const r=await sb.from('saved_resources').select('resource_id').eq('user_id',user.id);if(!r.error)return (r.data||[]).map(x=>String(x.resource_id))}
+ try{return JSON.parse(localStorage.getItem('apsh-saved')||'[]').map(String)}catch{return[]}
+}
+async function isSaved(id){return (await savedIds()).includes(String(id))}
+async function toggleSave(id){
+ if(!user){toast('Log in to save resources');return}
+ const exists=await isSaved(id);
+ if(exists){const r=await sb.from('saved_resources').delete().eq('user_id',user.id).eq('resource_id',id);if(r.error)toast(r.error.message);else toast('Removed from Saved')}
+ else {const r=await sb.from('saved_resources').insert({user_id:user.id,resource_id:id});if(r.error)toast(r.error.message);else toast('Saved')}
+ document.dispatchEvent(new Event('saved-updated'))
+}
+async function wireCards(){for(const b of $$('[data-save]')){const id=b.dataset.save;if(await isSaved(id)){b.classList.add('saved');b.textContent='★'}b.onclick=async()=>{await toggleSave(id);const on=await isSaved(id);b.classList.toggle('saved',on);b.textContent=on?'★':'☆'}}observeReveals()}
 function observeReveals(){
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){$$('.reveal').forEach(el=>el.classList.add('in-view'));return}
-  if(!('IntersectionObserver' in window)){$$('.reveal').forEach(el=>el.classList.add('in-view'));return}
-  if(!revealObserver){revealObserver=new IntersectionObserver((entries)=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in-view');revealObserver.unobserve(entry.target)}})},{threshold:.12,rootMargin:'0px 0px -8% 0px'});}
-  $$('.reveal:not(.in-view)').forEach((el,i)=>{if(!el.dataset.revealed){el.style.transitionDelay=Math.min(i*0.05,0.3)+'s';el.dataset.revealed='1';revealObserver.observe(el)}});
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){$$('.reveal').forEach(x=>x.classList.add('in-view'));return}
+ if(!('IntersectionObserver'in window)){$$('.reveal').forEach(x=>x.classList.add('in-view'));return}
+ const o=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in-view');o.unobserve(e.target)}}),{threshold:.08});
+ $$('.reveal:not(.in-view)').forEach(x=>o.observe(x))
 }
-
-/* ---- custom cursor (pointer devices only) ---- */
-function initCursor(){
-  if(!window.matchMedia('(pointer: fine)').matches)return;
-  if(document.querySelector('.cursor-dot'))return;
-  const dot=document.createElement('div');dot.className='cursor-dot';
-  const ring=document.createElement('div');ring.className='cursor-ring';
-  document.body.append(dot,ring);
-  document.body.classList.add('has-cursor');
-  let mx=innerWidth/2,my=innerHeight/2,rx=mx,ry=my;
-  addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px'});
-  (function loop(){rx+=(mx-rx)*.16;ry+=(my-ry)*.16;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop)})();
-  document.body.addEventListener('mouseover',e=>{if(e.target.closest('a,button'))document.body.classList.add('cursor-active')});
-  document.body.addEventListener('mouseout',e=>{if(e.target.closest('a,button'))document.body.classList.remove('cursor-active')});
+function nav(){
+ const menu=$('#menuBtn'),n=$('.nav');if(menu)n&&menu.addEventListener('click',()=>{const open=n.classList.toggle('open');menu.setAttribute('aria-expanded',String(open))});
+ const th=$('#themeBtn');if(th)th.onclick=toggleTheme;
+ const slot=$('[data-user-slot]');if(slot){
+  if(user){
+   const name=esc(profileName()),letter=esc(initials(profileName()));
+   slot.innerHTML=`<div class="profile-wrap"><button class="profile-btn" id="profileBtn" aria-label="Open profile menu">${letter}</button><div class="profile-menu" id="profileMenu">
+    <div class="who"><strong>${name}</strong><span>${esc(user.email||'')}</span></div>
+    <a href="${baseHref()}profile/">Profile</a><a href="${baseHref()}saved/">Saved</a><a href="${baseHref()}profile/#uploads">My uploads</a><a href="${baseHref()}settings/">Settings</a>${profile?.role==='admin'?`<a href="${baseHref()}admin/">Admin</a>`:''}<button class="danger" id="signout">Log out</button>
+   </div></div>`;
+   $('#profileBtn').onclick=()=>$('#profileMenu').classList.toggle('open');
+   $('#signout').onclick=async()=>{await sb.auth.signOut();location.href=baseHref()}
+  }else{
+   slot.innerHTML=`<div class="auth-actions"><a class="btn btn-secondary btn-small" href="${baseHref()}login/">Log in</a><a class="btn btn-primary btn-small" href="${baseHref()}signup/">Sign up</a></div>`
+  }
+ }
 }
-
-async function homePage(){const d=await data();window.APSH_DATA=d;const st=$('#statusText');if(st){st.textContent=isDemo()?'Preview mode · sample data (connect Supabase in assets/config.js)':'Live · community-submitted resources';const dot=document.querySelector('.status-dot');if(dot)dot.style.background=isDemo()?'var(--warning)':'var(--success)'}const courses=$('[data-courses]');if(courses){courses.innerHTML=d.courses.slice(0,9).map(c=>{const s=subjectFor(d.subjects,c.subject_id);return `<a class="course-card reveal" href="course/?slug=${encodeURIComponent(c.slug)}"><div class="course-icon">${esc((c.name||'AP').replace(/^AP\s*/,'').slice(0,2).toUpperCase())}</div><h3>${esc(c.name)}</h3><p>${esc(s?.name||'AP Course')}</p><span class="arrow">Browse resources →</span></a>`}).join('');}const featured=$('[data-featured]');if(featured){const arr=d.resources.filter(r=>r.featured).slice(0,6);featured.innerHTML=arr.length?arr.map(r=>resourceCard(r,d)).join(''):`<div class="empty full"><h3>No featured resources yet</h3><p>Approved resources can be featured by an administrator.</p></div>`;wireCards();}const stats=$('[data-stat-courses]');if(stats)stats.textContent=d.courses.length;const sr=$('[data-stat-resources]');if(sr)sr.textContent=d.resources.length;}
-async function browsePage(){const d=await data();window.APSH_DATA=d;const q=new URLSearchParams(location.search).get('q')||'';const search=$('#browseSearch');if(search)search.value=q;const subject=$('#filterSubject'),course=$('#filterCourse'),year=$('#filterYear'),type=$('#filterType'),sort=$('#filterSort'),list=$('[data-browse-list]'),count=$('#resultCount');subject.innerHTML='<option value="">All subjects</option>'+d.subjects.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');course.innerHTML='<option value="">All courses</option>'+d.courses.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');const years=[...new Set(d.resources.map(r=>r.year).filter(Boolean))].sort((a,b)=>b-a);year.innerHTML='<option value="">All years</option>'+years.map(y=>`<option>${esc(y)}</option>`).join('');const types=[...new Set(d.resources.map(r=>r.resource_type).filter(Boolean))].sort();type.innerHTML='<option value="">All types</option>'+types.map(x=>`<option>${esc(x)}</option>`).join('');function render(){let a=[...d.resources];const query=(search.value||'').trim().toLowerCase();if(query)a=a.filter(r=>{const c=courseFor(d.courses,r.course_id),s=subjectFor(d.subjects,r.subject_id);return [r.title,r.description,r.unit_name,r.resource_type,c?.name,s?.name,r.year].join(' ').toLowerCase().includes(query)});if(subject.value)a=a.filter(r=>String(r.subject_id)===subject.value);if(course.value)a=a.filter(r=>String(r.course_id)===course.value);if(year.value)a=a.filter(r=>String(r.year)===year.value);if(type.value)a=a.filter(r=>r.resource_type===type.value);if(sort.value==='oldest')a.sort((x,y)=>new Date(x.created_at)-new Date(y.created_at));if(sort.value==='title')a.sort((x,y)=>x.title.localeCompare(y.title));if(sort.value==='featured')a.sort((x,y)=>Number(y.featured)-Number(x.featured));count.textContent=`${a.length} resource${a.length===1?'':'s'}`;list.innerHTML=a.length?a.map(r=>resourceCard(r,d)).join(''):`<div class="empty" style="grid-column:1/-1"><h3>No resources found</h3><p>Try clearing a filter or using a different search.</p><button class="btn btn-secondary" id="clearFilters">Clear Filters</button></div>`;wireCards();const clear=$('#clearFilters');if(clear)clear.onclick=()=>{subject.value='';course.value='';year.value='';type.value='';search.value='';sort.value='featured';render()};} [search,subject,course,year,type,sort].forEach(x=>x.addEventListener('input',render));render();}
-async function coursesPage(){const d=await data();window.APSH_DATA=d;const list=$('[data-course-list]');list.innerHTML=d.courses.map(c=>{const s=subjectFor(d.subjects,c.subject_id);const n=d.resources.filter(r=>String(r.course_id)===String(c.id)).length;return `<a class="course-card reveal" href="../course/?slug=${encodeURIComponent(c.slug)}"><div class="course-icon">${esc((c.name||'AP').replace(/^AP\s*/,'').slice(0,2).toUpperCase())}</div><h3>${esc(c.name)}</h3><p>${esc(s?.name||'AP Course')} · ${n} resource${n===1?'':'s'}</p><span class="arrow">Open course →</span></a>`}).join('');wireCards();}
-async function coursePage(){const d=await data();window.APSH_DATA=d;const slug=new URLSearchParams(location.search).get('slug');const c=currentCourse(d.courses,slug);const head=$('[data-course-title]'),sub=$('[data-course-desc]'),list=$('[data-course-resources]');if(!c){head.textContent='Course not found';sub.textContent='The course link may be outdated.';return}head.textContent=c.name;sub.textContent=c.description||'Find study materials for this AP course.';const resources=d.resources.filter(r=>String(r.course_id)===String(c.id));list.innerHTML=resources.length?resources.map(r=>resourceCard(r,d)).join(''):`<div class="empty"><h3>No approved resources yet</h3><p>Be the first to add a useful resource.</p><a class="btn btn-primary" href="../add/">Add Your Findings</a></div>`;wireCards();}
-async function resourcePage(){const d=await data();window.APSH_DATA=d;const id=new URLSearchParams(location.search).get('id'),slug=new URLSearchParams(location.search).get('slug');let r=d.resources.find(x=>String(x.id)===String(id)||x.slug===slug);if(!r&&isDemo())r=demo.resources[0];const title=$('[data-resource-title]');if(!r){title.textContent='Resource not found';return}const c=r.courses||courseFor(d.courses,r.course_id),s=r.subjects||subjectFor(d.subjects,r.subject_id);title.textContent=r.title;$('[data-resource-description]').textContent=r.description||'No description provided.';const meta=$('[data-resource-meta]');meta.innerHTML=`<span class="chip">${esc(c?.name||'')}</span><span class="chip">${esc(r.unit_number?'Unit '+r.unit_number+(r.unit_name?' · '+r.unit_name:''):'Full Course')}</span>${r.year?`<span class="chip">${esc(r.year)}</span>`:''}<span class="chip">${esc(r.resource_type||'Resource')}</span>`;const open=$('#resourceOpen'),download=$('#resourceDownload'),viewer=$('#pdfViewer'),note=$('#resourceNote');if(r.external_url){open.href=r.external_url;open.target='_blank';open.rel='noopener noreferrer';download.classList.add('hide');viewer.classList.add('hide');note.textContent='This resource is hosted externally.'}else if(r.file_path&&!isDemo()&&sb){const signed=await sb.storage.from(CFG.STORAGE_BUCKET||'ap-resources').createSignedUrl(r.file_path,3600);if(!signed.error&&signed.data?.signedUrl){open.href=signed.data.signedUrl;open.target='_blank';download.href=signed.data.signedUrl;download.download=r.file_name||'';viewer.src=signed.data.signedUrl;note.textContent='PDF preview generated from Supabase Storage.'}else{note.textContent='The file could not be opened. Check your Storage policies and file path.'}}else{open.href='#';open.onclick=e=>{e.preventDefault();toast(isDemo()?'Connect Supabase in assets/config.js to open uploaded PDFs.':'This file could not be opened. Check your Storage policies.')};download.classList.add('hide');viewer.classList.add('hide');note.textContent='No PDF is attached to this resource.'}const saveBtn=$('#detailSave');saveBtn.textContent=isSaved(r.id)?'★ Saved':'☆ Save';saveBtn.onclick=()=>{toggleSave(r.id);saveBtn.textContent=isSaved(r.id)?'★ Saved':'☆ Save'};}
-function setNotice(msg,type=''){const n=$('#formNotice');if(n){n.className='notice '+type;n.textContent=msg;n.classList.remove('hide')}}
-async function requireAuth(){if(isDemo()){setNotice('This site is not yet connected to a database. Add Your Findings will work once Supabase is configured in assets/config.js.','error');return false}if(!user){location.href='../login/?next='+encodeURIComponent(location.pathname+location.search);return false}return true}
-async function addPage(){const ok=await requireAuth();if(!ok)return;const d=await data();const s=$('#addSubject'),c=$('#addCourse'),u=$('#addUnit');s.innerHTML='<option value="">Select subject</option>'+d.subjects.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');c.innerHTML='<option value="">Select course</option>';u.innerHTML='<option value="">Full Course / All Units</option>';s.onchange=()=>{c.innerHTML='<option value="">Select course</option>'+d.courses.filter(x=>String(x.subject_id)===String(s.value)).map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');u.innerHTML='<option value="">Full Course / All Units</option>'};c.onchange=()=>{const units=d.resources.filter(x=>String(x.course_id)===String(c.value)&&x.unit_number).map(x=>({n:x.unit_number,name:x.unit_name}));const uniq=[...new Map(units.map(x=>[x.n,x])).values()].sort((a,b)=>a.n-b.n);u.innerHTML='<option value="">Full Course / All Units</option>'+uniq.map(x=>`<option value="${esc(x.n)}">Unit ${esc(x.n)}${x.name?' · '+esc(x.name):''}</option>`).join('')};const form=$('#addForm');const file=$('#resourceFile'),link=$('#externalUrl'),fileBox=$('#fileBox'),linkBox=$('#linkBox'),type=$('#resourceType');function sync(){const mode=$('input[name="resourceMode"]:checked').value;fileBox.classList.toggle('hide',mode!=='file');linkBox.classList.toggle('hide',mode!=='link');file.required=mode==='file';link.required=mode==='link'}$$('input[name="resourceMode"]').forEach(x=>x.onchange=sync);sync();form.onsubmit=async e=>{e.preventDefault();if(!sb){setNotice('Supabase is not connected. Add your project URL and publishable/anon key in assets/config.js.','error');return}const titleVal=$('#resourceTitle').value.trim();if(!titleVal){setNotice('Please enter a resource title.','error');return}const mode=$('input[name="resourceMode"]:checked').value;const f=file.files[0];if(mode==='file'){if(!f||f.type!=='application/pdf'){setNotice('Please choose a PDF file.','error');return}if(f.size>(CFG.MAX_UPLOAD_MB||25)*1024*1024){setNotice(`The PDF must be ${CFG.MAX_UPLOAD_MB||25} MB or smaller.`,'error');return}}if(mode==='link'&&!/^https?:\/\//i.test(link.value.trim())){setNotice('Please enter a valid http(s) link.','error');return}const btn=form.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='Submitting…';try{let path=null;if(f){const safe=slugify(f.name).slice(0,80)||'resource';path=`pending/${user.id}/${Date.now()}-${safe}.pdf`;const up=await sb.storage.from(CFG.STORAGE_BUCKET||'ap-resources').upload(path,f,{contentType:'application/pdf',upsert:false});if(up.error)throw up.error}const submittedBy=user.id;const row={title:$('#resourceTitle').value.trim(),slug:slugify($('#resourceTitle').value),description:$('#resourceDescription').value.trim()||null,subject_id:s.value,course_id:c.value,year:$('#addYear').value?Number($('#addYear').value):null,unit_number:u.value?Number(u.value):null,unit_name:null,resource_type:type.value,file_path:path,file_name:f?.name||null,file_size:f?.size||null,mime_type:f?.type||null,external_url:mode==='link'?link.value.trim():null,submitted_by:submittedBy,status:'pending',featured:false,view_count:0,download_count:0};const ins=await sb.from('resources').insert(row);if(ins.error)throw ins.error;form.reset();sync();setNotice('Submitted successfully. Your resource is now pending moderation.','success');toast('Resource submitted');}catch(err){console.error(err);setNotice(err.message||'Submission failed. Check your Supabase policies and column names.','error')}finally{btn.disabled=false;btn.textContent='Submit Resource'}}}
-async function loginPage(){const form=$('#loginForm');if(!form)return;if(isDemo()){setNotice('This site is not yet connected to a database. Connect Supabase in assets/config.js to enable real authentication.','error');return}form.onsubmit=async e=>{e.preventDefault();const btn=form.querySelector('button');btn.disabled=true;try{const {data,error}=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#password').value});if(error)throw error;const next=new URLSearchParams(location.search).get('next')||'../';location.href=next}catch(err){setNotice(err.message||'Login failed.','error')}finally{btn.disabled=false}};$('#signupBtn').onclick=async()=>{const email=$('#email').value.trim(),password=$('#password').value;if(!email||!password){setNotice('Enter an email and password before creating an account.','error');return}if(password.length<6){setNotice('Password must be at least 6 characters.','error');return}try{const {data,error}=await sb.auth.signUp({email,password});if(error)throw error;setNotice(data.session?'Account created.':'Account created. Check your email if confirmation is enabled.','success')}catch(err){setNotice(err.message||'Sign up failed.','error')}}}
-async function adminPage(){const panel=$('#adminPanel');if(isDemo()){panel.innerHTML='<div class="notice error">This site is not yet connected to a database, so moderation is unavailable. Connect Supabase in assets/config.js.</div>';return}if(!user){location.href='../login/?next=../admin/';return}if(!profile||profile.role!=='admin'){panel.innerHTML='<div class="empty"><h3>Admin access required</h3><p>Your account does not have the admin role.</p></div>';return}const r=await sb.from('resources').select('*, courses(name), subjects(name)').order('created_at',{ascending:false});if(r.error){panel.innerHTML=`<div class="notice error">${esc(r.error.message)}</div>`;return}const rows=r.data||[];panel.innerHTML=`<div class="inline" style="margin-bottom:16px"><strong>${rows.filter(x=>x.status==='pending').length} pending submissions</strong><span class="muted small">Review before making resources public.</span></div><div style="overflow:auto"><table class="admin-table"><thead><tr><th>Resource</th><th>Course</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows.map(x=>`<tr><td><strong>${esc(x.title)}</strong><br><span class="muted small">${esc(x.description||'')}</span></td><td>${esc(x.courses?.name||'')}</td><td>${esc(x.resource_type||'')}</td><td><span class="status ${esc(x.status)}">${esc(x.status)}</span></td><td><div class="inline">${x.status==='pending'?`<button class="btn btn-primary" data-approve="${esc(x.id)}">Approve</button><button class="btn btn-secondary" data-reject="${esc(x.id)}">Reject</button>`:''}<button class="btn btn-secondary" data-delete="${esc(x.id)}">Delete</button></div></td></tr>`).join('')}</tbody></table></div>`;$$('[data-approve]').forEach(b=>b.onclick=()=>moderate(b.dataset.approve,'approved'));$$('[data-reject]').forEach(b=>b.onclick=()=>moderate(b.dataset.reject,'rejected'));$$('[data-delete]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this resource?'))return;const x=await sb.from('resources').delete().eq('id',b.dataset.delete);if(x.error)toast(x.error.message);else{toast('Resource deleted');adminPage()}});async function moderate(id,status){const x=await sb.from('resources').update({status,updated_at:new Date().toISOString()}).eq('id',id);if(x.error)toast(x.error.message);else{toast(`Resource ${status}`);adminPage()}}}
-async function aboutPage(){/* static */}
-async function savedPage(){const list=$('#savedList');let ids=[];try{ids=JSON.parse(localStorage.getItem('apsh-saved')||'[]')}catch{}if(!ids.length){list.innerHTML='<div class="empty" style="grid-column:1/-1"><h3>Nothing saved yet</h3><p>Use the ☆ button on a resource to keep it here.</p><a class="btn btn-primary" href="../browse/">Browse Resources</a></div>';observeReveals();return}const d=await data();window.APSH_DATA=d;const items=d.resources.filter(r=>ids.map(String).includes(String(r.id)));list.innerHTML=items.length?items.map(r=>resourceCard(r,d)).join(''):'<div class="empty" style="grid-column:1/-1"><h3>Those resources are no longer available</h3><p>They may have been removed or are no longer approved.</p></div>';wireCards();}
-async function init(){theme();layout();await initSupabase();const p=getPath();try{if($('[data-home]'))await homePage();else if($('[data-browse]'))await browsePage();else if($('[data-courses]'))await coursesPage();else if($('[data-course-page]'))await coursePage();else if($('[data-resource-page]'))await resourcePage();else if($('[data-add]'))await addPage();else if($('[data-login]'))await loginPage();else if($('[data-admin]'))await adminPage();else if($('[data-saved]'))await savedPage();}catch(e){console.error(e);const root=$('[data-error-root]');if(root)root.innerHTML=`<div class="notice error">Something went wrong loading this page. ${esc(e.message||'Unknown error')}</div>`}const signout=$('#signout');if(signout&&sb)signout.onclick=async()=>{await sb.auth.signOut();location.href=baseHref()};const userSlot=$('[data-user-slot]');if(userSlot){userSlot.innerHTML=user?`<span class="small muted">${esc(user.email||'Signed in')}</span> <button class="btn btn-secondary" id="signout">Sign out</button>`:`<a class="btn btn-primary" href="${p.includes('/login/')?'./':baseHref()+'login/'}">Login</a>`;if($('#signout'))$('#signout').onclick=async()=>{await sb.auth.signOut();location.reload()}}observeReveals();}
-window.APSH={toast,esc,toggleTheme};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+function wireSearch(){
+ $$('[data-global-search]').forEach(inp=>inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const q=inp.value.trim();location.href=baseHref()+'browse/'+(q?'?q='+encodeURIComponent(q):'')}}))
+}
+async function homePage(){
+ const d=await data(),courses=$('[data-courses]'),featured=$('[data-featured]');
+ if(courses)courses.innerHTML=d.courses.slice(0,9).map(c=>`<a class="course-card reveal" href="${baseHref()}course/?slug=${encodeURIComponent(c.slug)}"><div class="course-icon">${esc((c.name||'AP').replace(/^AP\s*/,'').slice(0,2).toUpperCase())}</div><h3>${esc(c.name)}</h3><p>${esc(subjectFor(d.subjects,c.subject_id)?.name||'AP Course')}</p><span class="arrow">Open course →</span></a>`).join('');
+ if(featured){const a=d.resources.filter(x=>x.featured).slice(0,3);featured.innerHTML=a.length?a.map(x=>resourceCard(x,d)).join(''):'<div class="empty"><h3>Resources are growing.</h3><p>Check Browse to explore the library.</p></div>';await wireCards()}
+ const c=$('[data-stat-courses]'),r=$('[data-stat-resources]');if(c)c.textContent=d.courses.length;if(r)r.textContent=d.resources.length;
+}
+function scoreResource(r,d,terms){
+ const c=courseFor(d.courses,r.course_id),s=subjectFor(d.subjects,r.subject_id),hay=normalizeQuery([r.title,r.description,r.unit_name,r.resource_type,c?.name,s?.name].join(' '));
+ let score=0;for(const t of terms){if(!t)continue;if(normalizeQuery(r.title)===t)score+=100;if(normalizeQuery(c?.name||'')===t)score+=90;if(normalizeQuery(s?.name||'')===t)score+=60;if(hay.includes(t))score+=20;if(normalizeQuery(r.unit_name||'').includes(t))score+=35}
+ if(r.featured)score+=5;return score
+}
+async function browsePage(){
+ const d=await data(),search=$('#browseSearch'),subject=$('#filterSubject'),course=$('#filterCourse'),year=$('#filterYear'),type=$('#filterType'),sort=$('#filterSort'),list=$('[data-browse-list]'),count=$('#resultCount');
+ const q=new URLSearchParams(location.search).get('q')||'';search.value=q;
+ subject.innerHTML='<option value="">All subjects</option>'+d.subjects.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');
+ course.innerHTML='<option value="">All courses</option>'+d.courses.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');
+ year.innerHTML='<option value="">All years</option>'+[...new Set(d.resources.map(x=>x.year).filter(Boolean))].sort((a,b)=>b-a).map(x=>`<option>${esc(x)}</option>`).join('');
+ type.innerHTML='<option value="">All types</option>'+[...new Set(d.resources.map(x=>x.resource_type).filter(Boolean))].sort().map(x=>`<option>${esc(x)}</option>`).join('');
+ function render(){
+  let a=[...d.resources],n=normalizeQuery(search.value),terms=queryTerms(search.value);
+  if(n)a=a.filter(r=>scoreResource(r,d,terms)>0).sort((x,y)=>scoreResource(y,d,terms)-scoreResource(x,d,terms));
+  if(subject.value)a=a.filter(r=>String(r.subject_id)===subject.value);if(course.value)a=a.filter(r=>String(r.course_id)===course.value);if(year.value)a=a.filter(r=>String(r.year)===year.value);if(type.value)a=a.filter(r=>r.resource_type===type.value);
+  if(sort.value==='title')a.sort((x,y)=>x.title.localeCompare(y.title));if(sort.value==='oldest')a.sort((x,y)=>new Date(x.created_at)-new Date(y.created_at));if(sort.value==='featured'&&!n)a.sort((x,y)=>Number(y.featured)-Number(x.featured));
+  count.textContent=`${a.length} result${a.length===1?'':'s'}`;
+  list.innerHTML=a.length?a.map(r=>resourceCard(r,d)).join(''):`<div class="empty" style="grid-column:1/-1"><h3>Nothing found.</h3><p>Try another course, unit, or search.</p><button class="btn btn-secondary" id="clearFilters">Clear filters</button></div>`;wireCards();
+  const clear=$('#clearFilters');if(clear)clear.onclick=()=>{search.value='';subject.value='';course.value='';year.value='';type.value='';render()}
+ }
+ [search,subject,course,year,type,sort].forEach(x=>x.addEventListener('input',render));render()
+}
+async function coursesPage(){
+ const d=await data(),list=$('[data-course-list]');list.innerHTML=d.courses.map(c=>`<a class="course-card reveal" href="../course/?slug=${encodeURIComponent(c.slug)}"><div class="course-icon">${esc((c.name||'AP').replace(/^AP\s*/,'').slice(0,2).toUpperCase())}</div><h3>${esc(c.name)}</h3><p>${esc(subjectFor(d.subjects,c.subject_id)?.name||'AP Course')}</p><span class="arrow">Open course →</span></a>`).join('');observeReveals()
+}
+async function coursePage(){
+ const d=await data(),slug=new URLSearchParams(location.search).get('slug'),c=d.courses.find(x=>x.slug===slug||String(x.id)===String(slug)),head=$('[data-course-title]'),desc=$('[data-course-desc]'),list=$('[data-course-resources]');
+ if(!c){head.textContent='Course not found';desc.textContent='';return}head.textContent=c.name;desc.textContent=c.description||'AP resources';const a=d.resources.filter(r=>String(r.course_id)===String(c.id));list.innerHTML=a.length?a.map(r=>resourceCard(r,d)).join(''):'<div class="empty"><h3>No resources yet.</h3><p>Be the first to contribute.</p></div>';wireCards()
+}
+async function resourcePage(){
+ const d=await data(),id=new URLSearchParams(location.search).get('id'),slug=new URLSearchParams(location.search).get('slug'),r=d.resources.find(x=>String(x.id)===String(id)||x.slug===slug);
+ const title=$('[data-resource-title]');if(!r){title.textContent='Resource not found';return}
+ const c=r.courses||courseFor(d.courses,r.course_id);title.textContent=r.title;$('[data-resource-description]').textContent=r.description||'';
+ $('[data-resource-meta]').innerHTML=`<span class="chip">${esc(c?.name||'')}</span><span class="chip">${esc(r.unit_number?'Unit '+r.unit_number+(r.unit_name?' · '+r.unit_name:''):'Full Course')}</span>${r.year?`<span class="chip">${esc(r.year)}</span>`:''}<span class="chip">${esc(r.resource_type||'Resource')}</span>`;
+ const open=$('#resourceOpen'),download=$('#resourceDownload'),viewer=$('#pdfViewer'),note=$('#resourceNote');
+ if(r.external_url){open.href=r.external_url;download.classList.add('hide');viewer.classList.add('hide');note.textContent='External resource'}
+ else if(r.file_path&&sb){const x=sb.storage.from(CFG.PUBLIC_BUCKET||'ap-public-resources').getPublicUrl(r.file_path);if(x.data?.publicUrl){open.href=x.data.publicUrl;download.href=x.data.publicUrl;download.download=r.file_name||'';viewer.src=x.data.publicUrl;note.textContent='PDF preview'}else note.textContent='This file could not be opened.'}
+ else{open.classList.add('hide');download.classList.add('hide');viewer.classList.add('hide');note.textContent='No file is attached.'}
+ const save=$('#detailSave');const sync=async()=>{const on=await isSaved(r.id);save.textContent=on?'★ Saved':'☆ Save';save.classList.toggle('saved',on)};await sync();save.onclick=async()=>{await toggleSave(r.id);sync()}
+}
+function setNotice(msg,type=''){const n=$('#formNotice');if(n){n.textContent=msg;n.className='notice '+type}}
+async function requireAuth(){
+ if(!user){location.href=baseHref()+'login/?next='+encodeURIComponent(location.pathname+location.search);return false}return true
+}
+function validText(v,max=180){const x=String(v||'').trim();return x.length>0&&x.length<=max&&!/[<>]/.test(x)}
+function safeUrl(v){try{const u=new URL(v);return ['http:','https:'].includes(u.protocol)?u.href:null}catch{return null}}
+async function addPage(){
+ if(!await requireAuth())return;const d=await data(),s=$('#addSubject'),c=$('#addCourse'),u=$('#addUnit');
+ s.innerHTML='<option value="">Select subject</option>'+d.subjects.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');c.innerHTML='<option value="">Select course</option>';u.innerHTML='<option value="">Full Course</option>';
+ s.onchange=()=>{c.innerHTML='<option value="">Select course</option>'+d.courses.filter(x=>String(x.subject_id)===String(s.value)).map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');u.innerHTML='<option value="">Full Course</option>'};
+ c.onchange=()=>{u.innerHTML='<option value="">Full Course</option>';const units=[...new Map(d.resources.filter(x=>String(x.course_id)===String(c.value)&&x.unit_number).map(x=>[x.unit_number,x.unit_name])).entries()].sort((a,b)=>a[0]-b[0]);u.innerHTML+=[...units].map(x=>`<option value="${esc(x[0])}">Unit ${esc(x[0])}${x[1]?' · '+esc(x[1]):''}</option>`).join('')};
+ const form=$('#addForm'),file=$('#resourceFile'),link=$('#externalUrl'),fileBox=$('#fileBox'),linkBox=$('#linkBox');
+ const sync=()=>{const mode=$('input[name="resourceMode"]:checked').value;fileBox.classList.toggle('hide',mode!=='file');linkBox.classList.toggle('hide',mode!=='link');file.required=mode==='file';link.required=mode==='link'};$$('input[name="resourceMode"]').forEach(x=>x.onchange=sync);sync();
+ form.onsubmit=async e=>{e.preventDefault();if(!sb){setNotice('Supabase is not connected.','error');return}const title=$('#resourceTitle').value.trim(),desc=$('#resourceDescription').value.trim(),mode=$('input[name="resourceMode"]:checked').value,f=file.files[0];
+  if(!validText(title,180)){setNotice('Enter a valid title.','error');return}if(desc.length>2000||/[<>]/.test(desc)){setNotice('Description contains invalid characters or is too long.','error');return}
+  if(mode==='file'&&(!f||f.type!=='application/pdf')){setNotice('Choose a PDF.','error');return}if(f&&f.size>(CFG.MAX_UPLOAD_MB||25)*1024*1024){setNotice(`File must be ${CFG.MAX_UPLOAD_MB||25} MB or smaller.`,'error');return}
+  const url=mode==='link'?safeUrl(link.value.trim()):null;if(mode==='link'&&!url){setNotice('Use a valid http(s) URL.','error');return}
+  const btn=form.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='Submitting…';
+  try{let fp=null;if(f){fp=`pending/${user.id}/${Date.now()}-${slugify(f.name)||'resource'}.pdf`;const up=await sb.storage.from(CFG.STORAGE_BUCKET||'ap-resources').upload(fp,f,{contentType:'application/pdf',upsert:false});if(up.error)throw up.error}
+   const row={title,slug:slugify(title),description:desc||null,subject_id:s.value,course_id:c.value,year:$('#addYear').value?Number($('#addYear').value):null,unit_number:u.value?Number(u.value):null,unit_name:null,resource_type:$('#resourceType').value,file_path:fp,file_name:f?.name||null,file_size:f?.size||null,mime_type:f?.type||null,external_url:url,submitted_by:user.id,status:'pending',featured:false};
+   const ins=await sb.from('resources').insert(row);if(ins.error)throw ins.error;form.reset();sync();setNotice('Submitted. It will appear after review.','success');toast('Resource submitted')
+  }catch(err){console.error(err);setNotice(err.message||'Submission failed.','error')}finally{btn.disabled=false;btn.textContent='Submit'}
+ }
+}
+async function loginPage(){
+ const form=$('#loginForm');if(!form)return;if(!sb){setNotice('Accounts are temporarily unavailable. Please try again later.','error');return}
+ form.onsubmit=async e=>{e.preventDefault();const b=form.querySelector('button');b.disabled=true;try{const {error}=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#password').value});if(error)throw error;const next=new URLSearchParams(location.search).get('next');location.href=next||baseHref()}catch(x){setNotice(x.message||'Login failed.','error')}finally{b.disabled=false}}
+ const forgot=$('#forgotBtn');if(forgot)forgot.onclick=async()=>{const email=$('#email').value.trim();if(!email){setNotice('Enter your email first.','error');return}const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+baseHref()+'settings/'});setNotice(error?error.message:'Password reset email sent. Check your inbox.',error?'error':'success')}
+}
+async function signupPage(){
+ const form=$('#signupForm');if(!form)return;if(!sb){setNotice('Accounts are temporarily unavailable. Please try again later.','error');return}
+ form.onsubmit=async e=>{e.preventDefault();const name=$('#displayName').value.trim(),email=$('#email').value.trim(),pw=$('#password').value,confirm=$('#confirmPassword').value;
+  if(!/^[A-Za-z][A-Za-z .'-]{1,29}$/.test(name)){setNotice('Use 2–30 letters with spaces or simple punctuation.','error');return}
+  if(pw.length<8){setNotice('Password must be at least 8 characters.','error');return}if(pw!==confirm){setNotice('Passwords do not match.','error');return}
+  const b=form.querySelector('button');b.disabled=true;try{const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:{display_name:name}}});if(error)throw error;
+   if(data.session){await sb.from('profiles').upsert({id:data.user.id,display_name:name},{onConflict:'id'});location.href=baseHref()}
+   else setNotice('Account created. Check your email to confirm your account.','success')
+  }catch(x){setNotice(x.message||'Sign up failed.','error')}finally{b.disabled=false}
+ }
+}
+async function savedPage(){
+ const list=$('#savedList');if(!user){list.innerHTML='<div class="empty"><h3>Saved is personal.</h3><p>Log in to keep your resources across devices.</p><a class="btn btn-primary" href="../login/">Log in</a></div>';return}
+ const ids=await savedIds();if(!ids.length){list.innerHTML='<div class="empty"><h3>Nothing saved.</h3><p>Save a resource and it will appear here.</p><a class="btn btn-primary" href="../browse/">Browse</a></div>';return}
+ const d=await data(),items=d.resources.filter(r=>ids.includes(String(r.id)));list.innerHTML=items.length?items.map(r=>resourceCard(r,d)).join(''):'<div class="empty"><h3>Nothing saved.</h3></div>';wireCards()
+}
+async function profilePage(){
+ if(!await requireAuth())return;const name=$('#profileName'),email=$('#profileEmail'),avatar=$('#profileAvatar');name.textContent=profileName();email.textContent=user.email||'';avatar.textContent=initials(profileName());
+ const list=$('#myUploads');if(!list)return;const r=await sb.from('resources').select('*, courses(name), subjects(name)').eq('submitted_by',user.id).order('created_at',{ascending:false});if(r.error){list.innerHTML='<div class="notice error">Could not load uploads.</div>';return}
+ const rows=r.data||[];list.innerHTML=rows.length?rows.map(x=>`<div class="setting-row"><div><strong>${esc(x.title)}</strong><span>${esc(x.courses?.name||'')} · <span class="status ${esc(x.status)}">${esc(x.status)}</span></span></div><button class="btn btn-secondary btn-small" data-delete-upload="${esc(x.id)}">Remove</button></div>`).join(''):'<div class="empty"><h3>No uploads.</h3><p>Share something useful with the community.</p></div>';
+ $$('[data-delete-upload]').forEach(b=>b.onclick=async()=>{if(!confirm('Remove this upload?'))return;const row=rows.find(x=>String(x.id)===String(b.dataset.delete-upload));if(row?.file_path){await sb.storage.from(CFG.PENDING_BUCKET||'ap-resources').remove([row.file_path]);await sb.storage.from(CFG.PUBLIC_BUCKET||'ap-public-resources').remove([row.file_path])}const x=await sb.from('resources').delete().eq('id',b.dataset.delete-upload).eq('submitted_by',user.id);if(x.error)toast(x.error.message);else{toast('Upload removed');profilePage()}})
+}
+async function settingsPage(){
+ if(!await requireAuth())return;$('#settingsName').value=profileName();$('#settingsEmail').value=user.email||'';
+ $('#profileForm').onsubmit=async e=>{e.preventDefault();const n=$('#settingsName').value.trim();if(!/^[A-Za-z][A-Za-z .'-]{1,29}$/.test(n)){setNotice('Use 2–30 letters with spaces or simple punctuation.','error');return}const x=await sb.from('profiles').update({display_name:n,updated_at:new Date().toISOString()}).eq('id',user.id);if(x.error){setNotice(x.error.message,'error');return}profile={...profile,display_name:n};setNotice('Profile updated.','success');nav()}
+ $('#passwordForm').onsubmit=async e=>{e.preventDefault();const p=$('#newPassword').value;if(p.length<8){setNotice('Password must be at least 8 characters.','error');return}const x=await sb.auth.updateUser({password:p});setNotice(x.error?x.error.message:'Password changed.','success')}
+ $('#deleteAccount').onclick=async()=>{if(!confirm('Delete your account and your uploads? This cannot be undone.'))return;const x=await sb.rpc('delete_my_account');if(x.error){setNotice(x.error.message,'error');return}location.href=baseHref()}
+}
+async function adminPage(){
+ const panel=$('#adminPanel');if(!user){location.href='../login/?next=../admin/';return}
+ if(profile?.role!=='admin'){panel.innerHTML='<div class="empty"><h3>Admin access required.</h3></div>';return}
+ const r=await sb.from('resources').select('*, courses(name), subjects(name)').order('created_at',{ascending:false});
+ if(r.error){panel.innerHTML=`<div class="notice error">${esc(r.error.message)}</div>`;return}
+ const rows=r.data||[];
+ panel.innerHTML=`<div class="inline" style="margin-bottom:15px"><strong>${rows.filter(x=>x.status==='pending').length} pending</strong></div>
+ <div style="overflow:auto"><table class="admin-table"><thead><tr><th>Resource</th><th>Course</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+ ${rows.map(x=>`<tr><td><strong>${esc(x.title)}</strong><br><span class="muted">${esc(x.description||'')}</span></td><td>${esc(x.courses?.name||'')}</td><td><span class="status ${esc(x.status)}">${esc(x.status)}</span></td><td><div class="inline">
+ ${x.status==='pending'?`<button class="btn btn-primary btn-small" data-approve="${esc(x.id)}">Approve</button><button class="btn btn-secondary btn-small" data-reject="${esc(x.id)}">Reject</button>`:''}
+ <button class="btn btn-secondary btn-small" data-delete="${esc(x.id)}">Delete</button></div></td></tr>`).join('')}
+ </tbody></table></div>`;
+ $$('[data-approve]').forEach(b=>b.onclick=()=>moderate(b.dataset.approve,'approved'));
+ $$('[data-reject]').forEach(b=>b.onclick=()=>moderate(b.dataset.reject,'rejected'));
+ $$('[data-delete]').forEach(b=>b.onclick=async()=>{
+   if(!confirm('Delete this resource?'))return;
+   const row=rows.find(x=>String(x.id)===String(b.dataset.delete));
+   if(row?.file_path) await sb.storage.from(CFG.PENDING_BUCKET||'ap-resources').remove([row.file_path]).catch(()=>{});
+   if(row?.status==='approved'&&row?.file_path) await sb.storage.from(CFG.PUBLIC_BUCKET||'ap-public-resources').remove([row.file_path]).catch(()=>{});
+   const x=await sb.from('resources').delete().eq('id',b.dataset.delete);
+   if(x.error)toast(x.error.message);else adminPage()
+ });
+ async function moderate(id,status){
+   const row=rows.find(x=>String(x.id)===String(id));
+   if(!row)return;
+   if(status==='approved'&&row.file_path){
+     const dl=await sb.storage.from(CFG.PENDING_BUCKET||'ap-resources').download(row.file_path);
+     if(dl.error){toast('Could not read the pending PDF.');return}
+     const up=await sb.storage.from(CFG.PUBLIC_BUCKET||'ap-public-resources').upload(row.file_path,dl.data,{contentType:row.mime_type||'application/pdf',upsert:true});
+     if(up.error){toast('Could not publish the PDF.');return}
+     await sb.storage.from(CFG.PENDING_BUCKET||'ap-resources').remove([row.file_path]);
+   }
+   const x=await sb.from('resources').update({status,updated_at:new Date().toISOString()}).eq('id',id);
+   if(x.error)toast(x.error.message);else{toast(`Resource ${status}`);adminPage()}
+ }
+}
+function navHighlight(){const current=path();$$('[data-nav]').forEach(a=>{const href=a.getAttribute('href')||'';const key=href.replace(/^(\.\.\/|\.\/)/,'').replace(/\/$/,'');if(!key)a.classList.toggle('active',current.endsWith('/')||current.split('/').length<=2);else a.classList.toggle('active',current.includes('/'+key+'/'))})}
+async function init(){
+ theme();await initSupabase();nav();wireSearch();navHighlight();
+ try{
+  if($('[data-home]'))await homePage();else if($('[data-browse]'))await browsePage();else if($('[data-courses]'))await coursesPage();else if($('[data-course-page]'))await coursePage();else if($('[data-resource-page]'))await resourcePage();else if($('[data-add]'))await addPage();else if($('[data-login]'))await loginPage();else if($('[data-signup]'))await signupPage();else if($('[data-saved]'))await savedPage();else if($('[data-profile]'))await profilePage();else if($('[data-settings]'))await settingsPage();else if($('[data-admin]'))await adminPage()
+ }catch(e){console.error(e);const root=$('[data-error-root]');if(root)root.innerHTML=`<div class="notice error">Something went wrong. ${esc(e.message||'Unknown error')}</div>`}
+ observeReveals()
+}
+window.APSH={toast,esc};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
