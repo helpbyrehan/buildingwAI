@@ -6,4 +6,6 @@ window.SUPABASE_CONFIG = {
   url: "https://ooueqdvguiiawfcmzkcr.supabase.co",
   anonKey: "sb_publishable_tCJc8-qyAWEekW_jWak-8Q_A-WV1oTA",
   storageBucket: "ap-resources"
+   MAX_UPLOAD_MB: 25,
+  DEMO_MODE: false
 };
