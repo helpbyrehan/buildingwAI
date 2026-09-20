@@ -1,99 +1,81 @@
 # AP Study Hub
 
-A production-oriented AP resource library frontend for GitHub Pages + Supabase.
+A production-oriented AP resource library for GitHub Pages + Supabase, redesigned around an editorial, minimal interface inspired by the visual principles of modern creative-agency sites.
 
-## Design
+## What is included
 
-The interface uses a minimal editorial direction: oversized typography, strong whitespace, short copy, subtle motion, dark/light themes, and separate focused pages rather than putting the entire product on the homepage.
+- Minimal landing page with large editorial typography
+- Search, course, saved-resource, add-resource, profile, settings, login, signup, resource, and admin pages
+- Responsive mobile/tablet/desktop layouts
+- Light/dark theme
+- Account display names
+- Account-based saved resources
+- User upload management
+- Admin moderation workflow
+- Intelligent AP search aliases such as `psych`, `physics`, `calc`, `chem`, `bio`, `csa`, `csp`, `apush`, `world`, `macro`, `micro`, `gov`, `lang`, `lit`, `seminar`, `research`, and `precalc`
+- Input validation and HTML escaping
+- PDF-only uploads with a 25 MB client-side limit
+- HTTP/HTTPS-only external resource links
+- Supabase Row Level Security and Storage policies
+- Password reset, password change, display-name change, and account deletion
+- GitHub Pages-friendly structure with `.nojekyll` and a 404 page
 
-## Main pages
+## Important Supabase setup
 
-- `/` — landing page + search entry
-- `/browse/` — intelligent search and filters
-- `/courses/` — AP course directory
-- `/course/?slug=...` — course library
-- `/resource/?id=...` — resource viewer
-- `/saved/` — authenticated saved resources
-- `/add/` — authenticated submissions
-- `/login/` — login
-- `/signup/` — signup + display name
-- `/profile/` — profile + uploads
-- `/settings/` — display name, password, account deletion
-- `/admin/` — admin moderation
-- `/about/` — short product explanation
+Run `schema.sql` in the Supabase SQL Editor before using authentication, saved resources, uploads, or moderation.
 
-## Account behavior
+The migration is designed around the existing AP Study Hub tables and adds missing columns used by the new frontend, including resource status, ownership, file metadata, resource type, units, featured state, and timestamps.
 
-Signup asks for a display name. That name is used throughout the interface instead of exposing the user's email.
+After creating your own account, make it an admin once:
 
-The profile menu provides:
+```sql
+UPDATE public.profiles SET role='admin' WHERE id='YOUR-AUTH-USER-UUID';
+```
 
-- Profile
-- Saved
-- My uploads
-- Settings
-- Admin (admins only)
-- Log out
+Do not place a service-role key in `assets/config.js`. The browser configuration must only contain the Supabase project URL and publishable/anon key.
 
-Saved resources are account-based and persist across devices.
+## Storage
 
-Users can remove their own uploads. Database RLS prevents users from modifying another user's account or resources.
-
-## Search
-
-Search normalizes capitalization and punctuation and understands common AP abbreviations such as:
-
-- psych
-- physics / phys
-- calc
-- chem
-- bio
-- csa / csp
-- stats
-- apush
-- world
-- euro
-- gov
-- macro / micro
-- lang / lit
-- seminar / research
-- precalc
-
-Results are relevance-ranked by title, course, subject, unit, resource type, and text.
-
-## Security
-
-Run `schema.sql` in the Supabase SQL Editor.
-
-The SQL adds:
-
-- profile display names
-- student/admin roles
-- saved resources
-- signup profile trigger
-- account deletion RPC
-- Row Level Security
-- private pending uploads
-- a separate public bucket for approved resources
-- admin-only publishing/deletion of public files
-
-Never put a Supabase service-role key in `assets/config.js`.
-
-## Supabase configuration
-
-`assets/config.js` contains only the browser-safe Supabase URL and publishable key, plus bucket names.
-
-The expected buckets are:
+Two buckets are used:
 
 - `ap-resources` — private pending uploads
-- `ap-public-resources` — public approved PDFs
+- `ap-public-resources` — public files after admin approval
 
-The admin workflow moves approved PDFs from the private bucket into the public bucket.
+A pending upload is stored inside a user-owned `pending/<user-id>/...` path. Storage policies prevent another student from reading or deleting that pending file.
 
-## Important
+## Search behavior
 
-The frontend cannot make database security safe by itself. RLS and Storage policies are required.
+The search system normalizes capitalization and punctuation, expands common AP abbreviations, and ranks matches by title, course, subject, unit, resource type, and text relevance.
 
-After running `schema.sql`, create your own account and use the commented admin SQL statement at the bottom of the file to assign yourself the admin role.
+Examples:
 
-Before launch, test account isolation, uploads, deletion, moderation, password reset, mobile layouts, invalid URLs/files, empty results, and failed network requests.
+- `psych` → AP Psychology
+- `physics` / `phys` → AP Physics
+- `calc` → AP Calculus
+- `chem` → AP Chemistry
+- `csa` → AP Computer Science A
+- `csp` → AP Computer Science Principles
+- `apush` → AP U.S. History
+- `world` → AP World History
+- `macro` / `micro` → AP Economics
+
+## Security model
+
+The frontend never treats hidden buttons as security. Authorization is enforced with Supabase RLS and Storage policies.
+
+Users can only:
+
+- update their own profile
+- save/delete their own saved-resource records
+- submit resources under their own account
+- remove their own resources
+
+Admins can moderate resources and publish approved files.
+
+## Validation
+
+Display names are restricted to 2–30 letters/spaces/simple punctuation. Resource titles and descriptions reject HTML-like input. External links are limited to HTTP/HTTPS. Uploads must be PDFs and cannot exceed the configured size limit.
+
+## GitHub Pages
+
+Publish the contents of this `apstudyhub` folder as the site root. `.nojekyll` is included so the directory structure and asset paths are served directly.
