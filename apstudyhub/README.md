@@ -79,3 +79,8 @@ Display names are restricted to 2–30 letters/spaces/simple punctuation. Resour
 ## GitHub Pages
 
 Publish the contents of this `apstudyhub` folder as the site root. `.nojekyll` is included so the directory structure and asset paths are served directly.
+
+
+## Account settings
+
+Change password uses Supabase Auth. To enable Delete account, run `supabase/account.sql` once in the Supabase SQL Editor. The function deletes the signed-in user's resource rows, profile row, and Auth account. Storage files are not deleted by this SQL function.

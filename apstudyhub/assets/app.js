@@ -2125,14 +2125,18 @@
           password:p
         });
   
-      setNotice(
-        x.error
-          ?x.error.message
-          :'Password changed.',
-        x.error
-          ?'error'
-          :'success'
-      );
+      if(x.error){
+        setNotice(
+          x.error.message,
+          'error'
+        );
+      }else{
+        $('#newPassword').value='';
+        setNotice(
+          'Password changed successfully.',
+          'success'
+        );
+      }
     };
   
     $('#deleteAccount').onclick=async()=>{
@@ -2142,23 +2146,28 @@
         )
       )return;
   
+      const b=$('#deleteAccount');
+      b.disabled=true;
+      b.textContent='Deleting…';
+
       const x=
         await sb.rpc(
           'delete_my_account'
         );
-  
+
       if(x.error){
-  
+        b.disabled=false;
+        b.textContent='Delete my account';
         setNotice(
-          x.error.message,
+          x.error.message ||
+          'Could not delete your account. Make sure the delete_my_account SQL function has been installed.',
           'error'
         );
-  
         return;
       }
-  
-      location.href=
-        baseHref();
+
+      await sb.auth.signOut();
+      location.href=baseHref();
     };
   }
   
