@@ -5,5 +5,5 @@ window.AP_STUDY_HUB_CONFIG = {
   PENDING_BUCKET: "ap-resources",
   PUBLIC_BUCKET: "ap-public-resources",
   MAX_UPLOAD_MB: 25,
-  
+
 };

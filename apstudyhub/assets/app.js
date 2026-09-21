@@ -2071,9 +2071,7 @@
         await sb
           .from('profiles')
           .update({
-            display_name:n,
-            updated_at:
-              new Date().toISOString()
+            display_name:n
           })
           .eq(
             'id',
@@ -2125,18 +2123,14 @@
           password:p
         });
   
-      if(x.error){
-        setNotice(
-          x.error.message,
-          'error'
-        );
-      }else{
-        $('#newPassword').value='';
-        setNotice(
-          'Password changed successfully.',
-          'success'
-        );
-      }
+      setNotice(
+        x.error
+          ?x.error.message
+          :'Password changed.',
+        x.error
+          ?'error'
+          :'success'
+      );
     };
   
     $('#deleteAccount').onclick=async()=>{
@@ -2146,28 +2140,23 @@
         )
       )return;
   
-      const b=$('#deleteAccount');
-      b.disabled=true;
-      b.textContent='Deleting…';
-
       const x=
         await sb.rpc(
           'delete_my_account'
         );
-
+  
       if(x.error){
-        b.disabled=false;
-        b.textContent='Delete my account';
+  
         setNotice(
-          x.error.message ||
-          'Could not delete your account. Make sure the delete_my_account SQL function has been installed.',
+          x.error.message,
           'error'
         );
+  
         return;
       }
-
-      await sb.auth.signOut();
-      location.href=baseHref();
+  
+      location.href=
+        baseHref();
     };
   }
   
