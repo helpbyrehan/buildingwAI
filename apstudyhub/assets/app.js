@@ -1660,6 +1660,46 @@
         b.disabled=false;
       }
     };
+
+    /* GOOGLE LOGIN - ADDED ONLY */
+    const googleLogin=$('#google-login');
+
+    if(googleLogin){
+
+      googleLogin.onclick=async()=>{
+
+        googleLogin.disabled=true;
+        googleLogin.textContent='Connecting…';
+
+        try{
+
+          const {error}=
+            await sb.auth.signInWithOAuth({
+              provider:'google',
+              options:{
+                redirectTo:
+                  'https://helpbyrehan.github.io/buildingwAI/apstudyhub/'
+              }
+            });
+
+          if(error){
+            throw error;
+          }
+
+        }catch(x){
+
+          setNotice(
+            x.message||
+            'Google login failed.',
+            'error'
+          );
+
+          googleLogin.disabled=false;
+          googleLogin.textContent='Continue with Google';
+        }
+      };
+    }
+    /* END GOOGLE LOGIN */
   
     const forgot=$('#forgotBtn');
   
