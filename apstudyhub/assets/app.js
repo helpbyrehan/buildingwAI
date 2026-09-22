@@ -1962,6 +1962,15 @@
   
     email.textContent=
       user.email||'';
+
+    const roleBadge=$('#profileRole');
+    if(roleBadge){
+      roleBadge.textContent=profile?.role==='admin'?'Admin':'Student';
+      if(profile?.role!=='admin'){
+        const teacher=await sb.rpc('is_approved_teacher');
+        if(!teacher.error&&teacher.data===true)roleBadge.textContent='Approved teacher';
+      }
+    }
   
     avatar.textContent=
       initials(profileName());

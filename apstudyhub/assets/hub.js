@@ -38,6 +38,7 @@
     if($('[data-classes]'))await classesPage();
     if($('[data-assistant]'))assistantPage();
     if($('[data-resource-page]'))await enhanceResourcePage();
+    if($('[data-admin]'))await teacherAdminPage();
   }
 
   function enhanceNavigation(){
@@ -185,8 +186,21 @@
       db.from('collections').select('*,collection_items(count)').eq('is_public',true).order('updated_at',{ascending:false}).limit(20),
       db.from('discussion_posts').select('*,post_replies(count)').is('classroom_id',null).order('created_at',{ascending:false}).limit(30)
     ]);
-    $('#collectionFeed').innerHTML=(collections.data||[]).length?(collections.data||[]).map(x=>`<article class="study-card"><div class="eyebrow">${esc(courseName(x.course_id))} · Student curated</div><h3>${esc(x.title)}</h3><p>${esc(x.description||'A community study collection.')}</p><small>${x.collection_items?.[0]?.count||0} resources</small>${user?`<button class="btn btn-small" data-save-collection="${esc(x.id)}">Save collection</button>`:''}</article>`).join(''):'<div class="empty"><h3>Be the first curator.</h3><p>Public collections will appear here.</p></div>';
-    $('#discussionFeed').innerHTML=(posts.data||[]).length?(posts.data||[]).map(x=>`<article class="discussion"><div class="eyebrow">${esc(courseName(x.course_id))} · Student</div><h3>${esc(x.title)}</h3><p>${esc(x.body)}</p><small>${x.post_replies?.[0]?.count||0} replies ${x.is_resolved?'· Answered':''}</small></article>`).join(''):'<div class="empty"><h3>No questions yet.</h3><p>Start a thoughtful, course-focused discussion.</p></div>';
+    const collectionFeed=$('#collectionFeed'), discussionFeed=$('#discussionFeed');
+    if(collections.error)notify(errorMessage(collections.error),'error');
+    if(posts.error)notify(errorMessage(posts.error),'error');
+    collectionFeed.innerHTML=collections.error?'<div class="empty"><p>Collections could not be loaded.</p></div>':(collections.data||[]).length?(collections.data||[]).map(x=>`<article class="study-card"><div class="eyebrow">${esc(courseName(x.course_id))} · Student curated</div><h3>${esc(x.title)}</h3><p>${esc(x.description||'A community study collection.')}</p><small>${x.collection_items?.[0]?.count||0} resources</small>${user?`<button class="btn btn-small" data-save-collection="${esc(x.id)}">Save collection</button>`:''}</article>`).join(''):'<div class="empty"><h3>Be the first curator.</h3><p>Public collections will appear here.</p></div>';
+    discussionFeed.innerHTML=posts.error?'<div class="empty"><p>Questions could not be loaded.</p></div>':(posts.data||[]).length?(posts.data||[]).map(x=>`<article class="discussion" data-discussion="${esc(x.id)}"><div class="eyebrow">${esc(courseName(x.course_id))} · Community question</div><h3>${esc(x.title)}</h3><p class="discussion-body">${esc(x.body)}</p><div class="discussion-actions"><small>${x.post_replies?.[0]?.count||0} replies ${x.is_resolved?'· Answered':''}</small><button class="btn btn-secondary btn-small" type="button" data-open-discussion="${esc(x.id)}" aria-expanded="false">View replies / Reply →</button></div><div class="discussion-thread hide" data-thread="${esc(x.id)}"></div></article>`).join(''):'<div class="empty"><h3>No questions yet.</h3><p>Start a thoughtful, course-focused discussion.</p></div>';
+
+    $$('[data-open-discussion]',discussionFeed).forEach(button=>button.addEventListener('click',async()=>{
+      const id=button.dataset.openDiscussion;
+      const thread=$('[data-thread="'+id+'"]',discussionFeed);
+      const opening=thread.classList.contains('hide');
+      thread.classList.toggle('hide',!opening);
+      button.setAttribute('aria-expanded',String(opening));
+      button.textContent=opening?'Hide replies ↑':'View replies / Reply →';
+      if(opening)await renderReplies(id,thread);
+    }));
     if(user){
       $('#communityComposer').classList.remove('hide');
       $('#collectionCourse').innerHTML='<option value="">All courses</option>'+courseOptions();
@@ -197,30 +211,116 @@
     }
   }
 
+  async function renderReplies(postId,thread){
+    thread.innerHTML='<p class="muted">Loading replies…</p>';
+    const result=await db.from('post_replies').select('id,author_id,body,created_at').eq('post_id',postId).order('created_at',{ascending:true});
+    if(result.error){thread.innerHTML=`<div class="notice error">${esc(errorMessage(result.error))}</div>`;return;}
+    thread.innerHTML=`<div class="reply-list">${(result.data||[]).length?(result.data||[]).map(x=>`<div class="discussion-reply"><div class="eyebrow">${x.author_id===user?.id?'You':'Community member'} · ${esc(new Date(x.created_at).toLocaleDateString())}</div><p>${esc(x.body)}</p></div>`).join(''):'<p class="muted">No replies yet. Start the discussion.</p>'}</div>${user?`<form class="reply-form" data-reply-form><label for="reply-${esc(postId)}">Your reply</label><textarea id="reply-${esc(postId)}" name="body" class="textarea" minlength="2" maxlength="3000" rows="3" placeholder="Share a useful explanation or ask a follow-up question" required></textarea><button class="btn btn-primary btn-small" type="submit">Post reply</button></form>`:`<p class="help"><a href="${root()}login/?next=${encodeURIComponent(location.pathname+location.search)}">Log in to reply.</a></p>`}`;
+    const form=$('[data-reply-form]',thread);
+    if(form)form.onsubmit=async e=>{
+      e.preventDefault();
+      const body=String(new FormData(form).get('body')||'').trim();
+      if(body.length<2){notify('Please write a reply before posting.','error');return;}
+      const send=$('button[type="submit"]',form);send.disabled=true;
+      const r=await db.from('post_replies').insert({post_id:postId,author_id:user.id,body});
+      send.disabled=false;
+      if(r.error){notify(errorMessage(r.error),'error');return;}
+      const count=$('[data-discussion="'+postId+'"] small',document);
+      if(count){const n=parseInt(count.textContent,10)||0;count.textContent=(n+1)+' replies';}
+      await renderReplies(postId,thread);
+      notify('Reply posted','success');
+    };
+  }
+
   async function classesPage(){
     if(!authRequired())return;
-    const [owned,memberships]=await Promise.all([
+    const [owned,memberships,role,application]=await Promise.all([
       db.from('classrooms').select('*,courses(name),classroom_members(count)').eq('owner_id',user.id),
-      db.from('classroom_members').select('*,classrooms(*,courses(name))').eq('user_id',user.id)
+      db.from('classroom_members').select('*,classrooms(*,courses(name))').eq('user_id',user.id),
+      db.rpc('is_approved_teacher'),
+      db.from('teacher_applications').select('status,submitted_at').eq('user_id',user.id).maybeSingle()
     ]);
+    if(role.error||application.error){
+      notify('Teacher permissions could not be checked. Run teacher-approval.sql in Supabase, then reload.','error');
+    }
+    const canCreate=!role.error&&role.data===true;
     const map=new Map();(owned.data||[]).forEach(x=>map.set(x.id,x));(memberships.data||[]).forEach(x=>{if(x.classrooms)map.set(x.classrooms.id,x.classrooms);});
-    $('#classList').innerHTML=map.size?[...map.values()].map(x=>`<article class="study-card"><div class="eyebrow">${x.owner_id===user.id?'Teacher space':'Class member'}</div><h3>${esc(x.name)}</h3><p>${esc(x.description||x.courses?.name||'Study together')}</p>${x.owner_id===user.id?`<div class="join-code"><span>Join code</span><strong>${esc(x.join_code)}</strong></div>`:''}</article>`).join(''):'<div class="empty"><h3>No classes yet.</h3><p>Create a teacher space or join one with a code.</p></div>';
+    $('#classList').innerHTML=map.size?[...map.values()].map(x=>`<article class="study-card"><div class="eyebrow">${x.owner_id===user.id?'Your class':'Class member'}</div><h3>${esc(x.name)}</h3><p>${esc(x.description||x.courses?.name||'Study together')}</p>${x.owner_id===user.id?`<div class="join-code"><span>Join code</span><strong>${esc(x.join_code)}</strong></div>`:''}</article>`).join(''):'<div class="empty"><h3>No classes yet.</h3><p>Join a teacher-led class with a code.</p></div>';
+    if(owned.error||memberships.error)notify(errorMessage(owned.error||memberships.error),'error');
     $('#classCourse').innerHTML='<option value="">General study group</option>'+courseOptions();
-    $('#createClassForm').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.currentTarget);const r=await db.from('classrooms').insert({owner_id:user.id,course_id:fd.get('course_id')||null,name:fd.get('name'),description:fd.get('description')||null}).select().single();if(r.error)notify(errorMessage(r.error),'error');else{await db.from('classroom_members').insert({classroom_id:r.data.id,user_id:user.id,member_role:'teacher'});location.reload();}};
+    const create=$('#createClassForm'),applicationPanel=$('#teacherApplicationPanel'),form=$('#teacherApplicationForm'),status=$('#teacherApplicationStatus');
+    create.classList.toggle('hide',!canCreate);
+    if(canCreate){
+      applicationPanel.classList.add('hide');
+      create.querySelector('.eyebrow').textContent='Approved teachers & admins';
+    }else{
+      applicationPanel.classList.remove('hide');
+      form.classList.toggle('hide',!!application.data||!!role.error||!!application.error);
+      status.textContent=role.error||application.error?'Teacher applications are temporarily unavailable. Ask an admin to run teacher-approval.sql.':application.data?.status==='pending'?'Your teacher application is awaiting an admin review.':application.data?.status==='rejected'?'Your teacher application was not approved. Contact an admin if you have questions.':application.data?.status==='approved'?'Teacher approval is pending a permission refresh. Please reload.':'Apply to become an approved teacher before creating a class.';
+      form.onsubmit=async e=>{
+        e.preventDefault();const reason=String(new FormData(form).get('statement')||'').trim();
+        if(reason.length<20){notify('Please include at least 20 characters about your teaching experience.','error');return;}
+        const button=form.querySelector('button[type="submit"]');button.disabled=true;
+        const r=await db.from('teacher_applications').insert({user_id:user.id,statement:reason});
+        button.disabled=false;
+        if(r.error)notify(errorMessage(r.error),'error');else{status.textContent='Application submitted. An admin will review it.';form.classList.add('hide');notify('Application submitted','success');}
+      };
+    }
+    create.onsubmit=async e=>{
+      e.preventDefault();
+      if(!canCreate){notify('Only approved teachers and admins can create classes.','error');return;}
+      const fd=new FormData(create),button=create.querySelector('button[type="submit"]');button.disabled=true;
+      const r=await db.from('classrooms').insert({owner_id:user.id,course_id:fd.get('course_id')||null,name:fd.get('name'),description:fd.get('description')||null}).select().single();
+      button.disabled=false;
+      if(r.error){notify(errorMessage(r.error),'error');return;}
+      const membership=await db.from('classroom_members').insert({classroom_id:r.data.id,user_id:user.id,member_role:'teacher'});
+      if(membership.error)notify('Class created, but membership setup failed: '+errorMessage(membership.error),'error');
+      else location.reload();
+    };
     $('#joinClassForm').onsubmit=async e=>{e.preventDefault();const code=new FormData(e.currentTarget).get('join_code');const r=await db.rpc('join_classroom',{code});if(r.error)notify(errorMessage(r.error),'error');else location.reload();};
   }
 
+  async function teacherAdminPage(){
+    if(!user)return;
+    const box=$('#teacherApplications');if(!box)return;
+    const profile=await db.from('profiles').select('role').eq('id',user.id).maybeSingle();
+    if(profile.error||profile.data?.role!=='admin')return;
+    box.classList.remove('hide');
+    const r=await db.from('teacher_applications').select('user_id,statement,status,submitted_at').eq('status','pending').order('submitted_at',{ascending:true});
+    if(r.error){box.innerHTML=`<div class="notice error">${esc(errorMessage(r.error))}. Run teacher-approval.sql if this feature is not installed.</div>`;return;}
+    box.innerHTML=`<div class="eyebrow">Teacher rank</div><h2>Teacher applications</h2>${(r.data||[]).length?(r.data||[]).map(x=>`<article class="teacher-application"><div class="eyebrow">Submitted ${esc(new Date(x.submitted_at).toLocaleDateString())}</div><p>${esc(x.statement)}</p><div class="feedback-actions"><button class="btn btn-primary btn-small" data-review-teacher="approved" data-applicant="${esc(x.user_id)}">Approve teacher</button><button class="btn btn-secondary btn-small" data-review-teacher="rejected" data-applicant="${esc(x.user_id)}">Reject</button></div></article>`).join(''):'<p class="muted">No pending applications.</p>'}`;
+    $$('[data-review-teacher]',box).forEach(button=>button.onclick=async()=>{
+      const approve=button.dataset.reviewTeacher==='approved';
+      if(!confirm((approve?'Approve':'Reject')+' this teacher application?'))return;
+      button.disabled=true;
+      const review=await db.rpc('review_teacher_application',{applicant:button.dataset.applicant,decision:button.dataset.reviewTeacher});
+      if(review.error){button.disabled=false;notify(errorMessage(review.error),'error');}
+      else{notify(approve?'Teacher approved':'Application rejected','success');await teacherAdminPage();}
+    });
+  }
+
   async function enhanceResourcePage(){
-    const id=new URLSearchParams(location.search).get('id');if(!id||!db)return;
-    if(user)await db.from('recent_views').upsert({user_id:user.id,resource_id:id,viewed_at:new Date().toISOString()},{onConflict:'user_id,resource_id'});
-    const target=$('.resource-detail > div:first-child')||$('.resource-detail');if(!target)return;
+    const id=new URLSearchParams(location.search).get('id');if(!id||!db||!/^\d+$/.test(id))return;
+    const target=$('.resource-detail');if(!target||$('#resourceFeedback'))return;
+    if(user){const recent=await db.from('recent_views').upsert({user_id:user.id,resource_id:id,viewed_at:new Date().toISOString()},{onConflict:'user_id,resource_id'});if(recent.error)console.warn('Recent view not recorded:',recent.error);}
     const quality=await db.from('resource_quality').select('*').eq('resource_id',id).maybeSingle();
-    const box=document.createElement('section');box.className='resource-feedback';
-    box.innerHTML=`<div class="eyebrow">Community quality</div><p>${quality.data?.helpful_percent!=null?esc(quality.data.helpful_percent)+'% found this helpful':'Be the first to rate this resource.'}</p>${user?'<div class="inline"><button class="btn btn-small" data-helpful="true">Helpful</button><button class="btn btn-small" data-helpful="false">Not helpful</button><button class="btn btn-ghost btn-small" id="reportResource">Report an issue</button></div>':'<a href="'+root()+'login/">Log in to rate or report</a>'}`;
+    const box=document.createElement('section');box.className='resource-feedback';box.id='resourceFeedback';
+    const percent=quality.data?.helpful_percent;
+    box.innerHTML=`<div class="eyebrow">Community quality</div><p class="quality-summary">${percent!=null?esc(percent)+'% found this helpful':'Be the first to rate this resource.'}</p>${user?'<div class="feedback-actions"><button class="btn btn-secondary btn-small" type="button" data-helpful="true">Helpful</button><button class="btn btn-secondary btn-small" type="button" data-helpful="false">Not helpful</button><button class="btn btn-ghost btn-small" type="button" id="reportResource">Report an issue</button></div>':'<p class="help"><a href="'+root()+'login/">Log in to rate or report</a></p>'}<a class="btn btn-secondary btn-small assistant-link" id="resourceAssistant" href="${root()}assistant/">Open Study Assistant →</a>`;
     target.append(box);
-    const tools=document.createElement('a');tools.className='btn btn-secondary btn-small';tools.href=root()+'assistant/?resource='+encodeURIComponent($('[data-resource-title]')?.textContent||'this resource');tools.textContent='Open Study Assistant →';box.append(tools);
-    $$('[data-helpful]',box).forEach(b=>b.onclick=async()=>{const r=await db.from('resource_feedback').upsert({user_id:user.id,resource_id:id,helpful:b.dataset.helpful==='true'},{onConflict:'user_id,resource_id'});notify(r.error?errorMessage(r.error):'Thanks for your feedback',r.error?'error':'success');});
-    if($('#reportResource'))$('#reportResource').onclick=async()=>{const reason=prompt('Issue type: broken, outdated, incorrect, copyright, unsafe, or other');if(!reason)return;if(!['broken','outdated','incorrect','copyright','unsafe','other'].includes(reason.toLowerCase())){notify('Choose one of the listed issue types.','error');return;}const details=prompt('Optional details')||'';const r=await db.from('resource_reports').insert({user_id:user.id,resource_id:id,reason:reason.toLowerCase(),details});notify(r.error?errorMessage(r.error):'Report sent for review',r.error?'error':'success');};
+    const assistant=$('#resourceAssistant');
+    const title=$('[data-resource-title]');
+    if(title&&title.textContent!=='Loading…')assistant.href=root()+'assistant/?resource='+encodeURIComponent(title.textContent);
+    else if(title){const observer=new MutationObserver(()=>{if(title.textContent!=='Loading…'){assistant.href=root()+'assistant/?resource='+encodeURIComponent(title.textContent);observer.disconnect();}});observer.observe(title,{childList:true,characterData:true,subtree:true});}
+    $$('[data-helpful]',box).forEach(b=>b.onclick=async()=>{
+      const r=await db.from('resource_feedback').upsert({user_id:user.id,resource_id:id,helpful:b.dataset.helpful==='true'},{onConflict:'user_id,resource_id'});
+      if(r.error){notify(errorMessage(r.error),'error');return;}
+      $$('[data-helpful]',box).forEach(el=>{const selected=el===b;el.classList.toggle('btn-primary',selected);el.classList.toggle('btn-secondary',!selected);el.setAttribute('aria-pressed',String(selected));});
+      const qualityUpdate=await db.from('resource_quality').select('helpful_percent').eq('resource_id',id).maybeSingle();
+      if(!qualityUpdate.error&&qualityUpdate.data?.helpful_percent!=null)$('.quality-summary',box).textContent=qualityUpdate.data.helpful_percent+'% found this helpful';
+      notify('Thanks for your feedback','success');
+    });
+    if($('#reportResource'))$('#reportResource').onclick=async()=>{const reason=prompt('Issue type: broken, outdated, incorrect, copyright, unsafe, or other');if(!reason)return;if(!['broken','outdated','incorrect','copyright','unsafe','other'].includes(reason.toLowerCase().trim())){notify('Choose one of the listed issue types.','error');return;}const details=prompt('Optional details')||'';const r=await db.from('resource_reports').insert({user_id:user.id,resource_id:id,reason:reason.toLowerCase().trim(),details});notify(r.error?errorMessage(r.error):'Report sent for review',r.error?'error':'success');};
   }
 
   function assistantPage(){

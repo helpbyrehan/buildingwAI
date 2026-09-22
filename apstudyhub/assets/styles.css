@@ -419,3 +419,71 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @media(max-width:900px){.dashboard-grid,.practice-layout{grid-template-columns:1fr}.side-panel{position:static}.metric-grid{grid-template-columns:repeat(2,1fr)}.metric:nth-child(2){border-right:0}.metric:nth-child(-n+2){border-bottom:1px solid var(--line)}}
 @media(max-width:650px){.hub-shell{padding:32px 0 55px}.hub-intro{display:block}.hub-intro p{margin-top:18px}.hub-nav{flex-wrap:nowrap;overflow-x:auto;padding-bottom:28px}.hub-nav a{white-space:nowrap}.metric-grid{grid-template-columns:1fr 1fr}.metric{min-height:95px}.study-grid{grid-template-columns:1fr}.study-card{border-right:0!important;min-height:165px}.field-row,.field-row.three{grid-template-columns:1fr}.question-card{min-height:0}.hub-section-head{align-items:start;flex-direction:column}.list-row{align-items:flex-start}.nav.open .navlinks{justify-self:stretch}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Resource detail: rating belongs below the content, never inside the heading/action row. */
+.resource-detail { min-width:0; }
+.resource-detail > .inline:first-child { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-top:0; }
+.resource-detail > .inline:first-child .right { margin-left:auto; }
+.resource-detail h1 { overflow-wrap:anywhere; line-height:1.04; }
+.resource-detail .lead { max-width:68ch; overflow-wrap:break-word; line-height:1.6; }
+.resource-detail .chips { margin-block:18px 22px; }
+.resource-detail .inline { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.resource-feedback { display:block; clear:both; margin-top:clamp(28px,5vw,48px); padding-top:24px; border-top:1px solid var(--line); }
+.resource-feedback .quality-summary { margin:14px 0 18px; line-height:1.45; font-size:clamp(15px,2vw,20px); }
+.feedback-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.feedback-actions .btn { margin:0; min-height:42px; white-space:normal; text-align:center; }
+.resource-feedback .assistant-link { display:inline-flex; margin-top:18px; min-height:42px; max-width:100%; white-space:normal; }
+.resource-detail .pdf-frame.hide { display:none; }
+/* Comfortable spacing and wrapping across pages and narrow screens. */
+.panel,.study-card,.discussion,.resource-card,.course-card,.list-row,.task-row { min-width:0; }
+.panel h1,.panel h2,.panel h3,.study-card h3,.resource-card h3,.course-card h3,.discussion h3 { overflow-wrap:break-word; line-height:1.12; }
+.study-card p,.discussion p,.list-row strong,.list-row small,.task-row strong,.task-row small { overflow-wrap:anywhere; }
+.study-card h3 { margin-top:18px; }
+.hub-section-head h2 { line-height:1.12; }
+.hub-intro h1 { line-height:1.04; }
+.field label { display:block; margin-bottom:8px; }
+.field input,.field select,.field textarea,.textarea,.input,.select { max-width:100%; min-width:0; }
+.dashboard-grid > *, .profile-grid > *, .practice-layout > * { min-width:0; }
+.hub-nav { min-width:0; }
+.discussion-body { white-space:pre-wrap; overflow-wrap:anywhere; }
+.discussion-actions { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-top:18px; }
+.discussion-thread { padding:18px; margin-top:18px; border:1px solid var(--line); background:var(--surface); }
+.discussion-reply { padding:14px 0; border-bottom:1px solid var(--line); }
+.discussion-reply:first-child { padding-top:0; }
+.discussion-reply:last-child { border-bottom:0; }
+.discussion-reply p { margin:8px 0; max-width:none; color:var(--text); white-space:pre-wrap; line-height:1.55; }
+.reply-form { display:grid; gap:10px; margin-top:20px; }
+.reply-form label { font:500 11px 'DM Mono',monospace; text-transform:uppercase; letter-spacing:.08em; }
+.reply-form .btn { justify-self:start; }
+.teacher-application { border-top:1px solid var(--line); margin-top:20px; padding-top:18px; }
+.teacher-application p { white-space:pre-wrap; overflow-wrap:anywhere; }
+@media (max-width:650px) {
+  .resource-detail { padding:clamp(16px,5vw,28px); }
+  .resource-detail h1 { font-size:clamp(30px,9vw,52px); }
+  .resource-detail .inline { align-items:stretch; }
+  .resource-detail .inline .btn { min-width:0; }
+  .resource-feedback .feedback-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .resource-feedback .feedback-actions #reportResource { grid-column:1/-1; }
+  .resource-feedback .assistant-link { width:100%; }
+  .discussion-actions { align-items:flex-start; }
+  .discussion-thread { padding:14px; }
+  .hub-intro h1 { font-size:clamp(36px,10vw,60px); }
+  .hub-section-head h2 { font-size:clamp(25px,7vw,36px); }
+  .join-code { flex-wrap:wrap; gap:12px; }
+  .study-card h3,.resource-card h3 { font-size:clamp(23px,7vw,30px); }
+}
+@media(max-width:380px) {
+  .nav-actions { gap:5px; }
+  .nav-actions .profile-btn { width:36px; height:36px; }
+  .nav-actions .icon-btn { width:34px; height:36px; }
+  .brand strong { font-size:11px; }
+}
+
+/* Readable display typography: previous .86/.9 line-height could cause adjacent lines to touch. */
+main[data-home] .hero h1 { line-height:1.02; letter-spacing:-.055em; }
+main[data-home] .section-head h2,.section-head h2,.page-head h1,.course-hero h1,.auth h1 { line-height:1.06; }
+.course-card h3,.resource-card h3 { line-height:1.12; }
+@media(max-width:650px) {
+  main[data-home] .hero h1 { line-height:1.06; font-size:clamp(34px,10vw,54px); }
+  .section-head h2,.page-head h1,.course-hero h1 { line-height:1.1; }
+}
