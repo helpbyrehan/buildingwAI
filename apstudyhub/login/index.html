@@ -3,14 +3,34 @@
 <meta name="description" content="Log in to AP Study Hub."><meta name="theme-color" content="#07090b"><title>Log in | AP Study Hub</title>
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="stylesheet" href="../assets/styles.css?v=20260921d"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>window.APSH_BASE='../';</script><script src="../assets/config.js"></script><script defer src="../assets/app.js?v=20260921d"></script></head><body><a class="skip" href="#main">Skip to content</a><header class="topbar"><div class="container nav"><a class="brand" href="../"><img class="mark" src="../assets/logo.svg" alt="" aria-hidden="true"><strong>AP STUDY HUB <span>· resources</span></strong></a>
+<script>window.APSH_BASE='../';</script><script src="../assets/config.js"></script><script defer src="../assets/app.js?v=20260921d"></script>
+</head><body><a class="skip" href="#main">Skip to content</a><header class="topbar"><div class="container nav"><a class="brand" href="../"><img class="mark" src="../assets/logo.svg" alt="" aria-hidden="true"><strong>AP STUDY HUB <span>· resources</span></strong></a>
 <button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false">☰</button>
 <nav class="navlinks" aria-label="Primary"><a data-nav href="../browse/" class="">Search</a><a data-nav href="../courses/" class="">Courses</a><a data-nav href="../saved/" class="">Saved</a><a data-nav href="../add/" class="">Add</a></nav>
 <div class="nav-actions"><span data-user-slot></span><button class="icon-btn" id="themeBtn" aria-label="Toggle theme">☼</button></div></div></header>
+
 <main id="main" data-login="true"><section class="auth-wrap"><div class="auth reveal"><div class="panel">
 <div class="eyebrow">AP Study Hub</div><h1>Welcome back.</h1><p>Save resources and manage your contributions.</p><div id="formNotice" class="notice hide" role="alert"></div>
-<form id="loginForm"><div class="field"><label>Email</label><input class="input" id="email" type="email" autocomplete="email" required></div><div class="field" style="margin-top:14px"><label>Password</label><input class="input" id="password" type="password" autocomplete="current-password" required></div>
-<button class="btn btn-primary" style="width:100%;margin-top:18px">Log in</button></form>
+
+<form id="loginForm">
+<div class="field"><label>Email</label><input class="input" id="email" type="email" autocomplete="email" required></div>
+<div class="field" style="margin-top:14px"><label>Password</label><input class="input" id="password" type="password" autocomplete="current-password" required></div>
+<button class="btn btn-primary" style="width:100%;margin-top:18px">Log in</button>
+</form>
+
+<div style="display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:13px">
+<div style="height:1px;flex:1;background:var(--border)"></div>
+<span>OR</span>
+<div style="height:1px;flex:1;background:var(--border)"></div>
+</div>
+
+<button class="btn btn-ghost" id="google-login" type="button" style="width:100%;">
+Continue with Google
+</button>
+
 <button class="btn btn-ghost" id="forgotBtn" style="width:100%;margin-top:7px">Forgot password?</button>
+
 <div class="auth-switch">New here? <a href="../signup/">Create an account</a></div>
-</div></div></section></main><footer class="footer"><div class="container footer-row"><span>AP Study Hub · Built for students, by students.</span><span>Search. Save. Share.</span></div></footer><div id="toast" class="toast" role="status" aria-live="polite"></div></body></html>
+</div></div></section></main>
+
+<footer class="footer"><div class="container footer-row"><span>AP Study Hub · Built for students, by students.</span><span>Search. Save. Share.</span></div></footer><div id="toast" class="toast" role="status" aria-live="polite"></div></body></html>
