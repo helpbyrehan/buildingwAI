@@ -2,6 +2,25 @@
 
 A production-oriented AP resource library for GitHub Pages + Supabase, built around an editorial, minimal interface inspired by the visual principles of modern creative-agency sites.
 
+## Full product upgrade
+
+Run `full-product-upgrade.sql` once in the Supabase SQL Editor before publishing this version. It is idempotent, so it can be safely run again. It adds the complete data model, indexes, helper functions, Row Level Security policies, resource-quality metadata, and a starter practice question for:
+
+- Personalized course dashboards and exam targets
+- Unit confidence and progress tracking
+- Weekly study tasks and generated starter plans
+- Recent resources, practice history, accuracy, and study streaks
+- Helpful votes and resource issue reports
+- Public study collections and saved collections
+- Practice questions with explanations
+- Flashcard decks and spaced-review records
+- Teacher/class spaces with join codes and shared resources
+- Course discussions and replies
+
+New pages are in `dashboard`, `planner`, `practice`, `assistant`, `community`, `classes`, and `policies`. The Study Assistant works entirely in the browser: pasted notes are not uploaded or saved.
+
+Before a public launch, replace the placeholder contact paragraph on the policies page with a monitored support/copyright address. Add original or properly licensed practice questions in Supabase; do not copy protected exam questions.
+
 ## What was fixed in this pass
 
 Change display name, delete-my-uploads, delete-account, and the Save/★ button for

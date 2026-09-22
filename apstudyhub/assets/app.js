@@ -292,6 +292,10 @@
               ?`<span class="chip">${esc(r.year)}</span>`
               :''
           }
+          ${r.difficulty?`<span class="chip">${esc(r.difficulty)}</span>`:''}
+          ${r.estimated_minutes?`<span class="chip">${esc(r.estimated_minutes)} min</span>`:''}
+          ${r.verified_at?'<span class="chip">Verified</span>':''}
+          ${r.teacher_recommended?'<span class="chip">Teacher recommended</span>':''}
         </div>
   
         <div class="resource-meta">
@@ -758,6 +762,7 @@
     const course=$('#filterCourse');
     const year=$('#filterYear');
     const type=$('#filterType');
+    const difficulty=$('#filterDifficulty');
     const sort=$('#filterSort');
     const list=$('[data-browse-list]');
     const count=$('#resultCount');
@@ -881,6 +886,10 @@
             type.value
         );
       }
+
+      if(difficulty&&difficulty.value){
+        a=a.filter(r=>r.difficulty===difficulty.value);
+      }
   
       if(sort.value==='title'){
         a.sort(
@@ -947,6 +956,7 @@
           course.value='';
           year.value='';
           type.value='';
+          if(difficulty)difficulty.value='';
           render();
         };
       }
@@ -958,8 +968,9 @@
       course,
       year,
       type,
+      difficulty,
       sort
-    ].forEach(
+    ].filter(Boolean).forEach(
       x=>x.addEventListener(
         'input',
         render
