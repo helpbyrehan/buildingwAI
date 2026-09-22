@@ -245,7 +245,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
     grid-column: 3;
     grid-row: 1;
     min-width: 0;
-    gap: 0;
+    gap: 8px;
     justify-self: end;
   }
 
