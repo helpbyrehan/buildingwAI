@@ -189,3 +189,192 @@ main[data-home] .resource-grid{
     width:100%;
   }
 }
+
+
+/* Mobile usability pass — preserves the existing visual design */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, svg, video, iframe { max-width: 100%; }
+input, select, textarea, button { max-width: 100%; }
+button, a { -webkit-tap-highlight-color: transparent; }
+
+.mobile-auth { display: none; }
+
+@media (max-width: 650px) {
+  .container {
+    width: min(calc(100% - 32px), var(--max));
+    margin-inline: auto;
+  }
+
+  .topbar { overflow: visible; }
+
+  .nav {
+    position: relative;
+    width: min(calc(100% - 24px), var(--max));
+    height: 68px;
+    grid-template-columns: minmax(0, 1fr) 40px 40px;
+    gap: 8px;
+    padding: 0;
+  }
+
+  .brand {
+    grid-column: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .brand strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .menu-btn {
+    grid-column: 2;
+    grid-row: 1;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  .nav-actions {
+    grid-column: 3;
+    grid-row: 1;
+    min-width: 0;
+    gap: 0;
+    justify-self: end;
+  }
+
+  .nav-actions .auth-actions { display: none; }
+  .nav-actions .profile-btn { width: 40px; height: 40px; }
+
+  .nav.open .navlinks {
+    display: flex;
+    position: absolute;
+    top: 68px;
+    left: 0;
+    right: 0;
+    z-index: 60;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 14px 16px 18px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .nav.open .navlinks a {
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+    padding: 11px 4px;
+    border-bottom: 1px solid var(--line);
+    font-size: 11px;
+  }
+
+  .mobile-auth {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding-top: 14px;
+  }
+
+  .mobile-auth a {
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--border) !important;
+    text-align: center;
+  }
+
+  .mobile-auth .mobile-signup {
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  .hero-search {
+    width: 100%;
+  }
+
+  .hero-search input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .home-actions,
+  .home-actions .btn,
+  .home-actions .skip-link {
+    width: 100%;
+  }
+
+  .home-actions .btn,
+  .home-actions .skip-link {
+    text-align: center;
+  }
+
+  .section,
+  .page-head,
+  .course-hero {
+    overflow: hidden;
+  }
+
+  .panel,
+  .course-card,
+  .resource-card {
+    min-width: 0;
+  }
+
+  .search-large,
+  .toolbar,
+  .form-grid {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .search-large input,
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .footer-row {
+    width: min(calc(100% - 32px), var(--max));
+  }
+}
+
+@media (max-width: 380px) {
+  .nav {
+    width: calc(100% - 16px);
+    grid-template-columns: minmax(0, 1fr) 38px 38px;
+  }
+
+  .brand strong { font-size: 12px; }
+  .brand .mark { width: 30px; height: 30px; }
+
+  .hero-search {
+    flex-wrap: wrap;
+    border-bottom: 0;
+    gap: 8px;
+  }
+
+  .hero-search input {
+    flex: 1 1 100%;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-search .btn {
+    width: 100%;
+    border: 1px solid var(--border);
+  }
+
+  .mobile-auth {
+    grid-template-columns: 1fr;
+  }
+}

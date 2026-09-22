@@ -473,10 +473,20 @@
       th.onclick=toggleTheme;
     }
   
+    const mobileAuth=$('[data-mobile-auth]');
     const slot=$('[data-user-slot]');
   
     if(slot){
       if(user){
+
+        if(mobileAuth){
+          mobileAuth.innerHTML=`
+            <a href="${baseHref()}profile/">Profile</a>
+            <a href="${baseHref()}saved/">Saved</a>
+            <a href="${baseHref()}settings/">Settings</a>
+          `;
+        }
+
   
         const name=esc(profileName());
         const letter=esc(initials(profileName()));
@@ -548,7 +558,14 @@
         };
   
       }else{
-  
+
+        if(mobileAuth){
+          mobileAuth.innerHTML=`
+            <a class="mobile-login" href="${baseHref()}login/">Log in</a>
+            <a class="mobile-signup" href="${baseHref()}signup/">Sign up</a>
+          `;
+        }
+
         slot.innerHTML=`
           <div class="auth-actions">
   
