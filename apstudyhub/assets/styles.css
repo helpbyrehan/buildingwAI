@@ -211,7 +211,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
     position: relative;
     width: min(calc(100% - 24px), var(--max));
     height: 68px;
-    grid-template-columns: minmax(0, 1fr) 40px 40px;
+    grid-template-columns: minmax(0, 1fr) 40px auto;
     gap: 8px;
     padding: 0;
   }
@@ -352,7 +352,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @media (max-width: 380px) {
   .nav {
     width: calc(100% - 16px);
-    grid-template-columns: minmax(0, 1fr) 38px 38px;
+    grid-template-columns: minmax(0, 1fr) 38px auto;
   }
 
   .brand strong { font-size: 12px; }
