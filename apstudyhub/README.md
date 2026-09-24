@@ -6,6 +6,7 @@ Static HTML/CSS/JavaScript site using GitHub Pages and an existing Supabase proj
 
 - Replaced the browser-only Study Assistant draft generator with the authenticated AP Study Hub AI service. Signed-in students can create structured summaries, self-checking quizzes and revealable flashcards without exposing the Cloudflare API key in public website code.
 - Added an atomic five-generations-per-user daily limit, a Supabase Edge Function gateway, strict note and output limits, responsive Study AI layouts, loading/error states, character counting and copy controls.
+- Hardened Study AI generation with strict server-side response checks, duplicate-question and duplicate-choice detection, formula/control-character cleanup, stronger AP-style assessment instructions, prompt-injection resistance, and an automatic repair attempt. The browser also cleans unsafe control characters as a final display safeguard.
 - The resource-quality section is now a separate block **below** the resource details and preview, rather than accidentally inserted into the small row containing the Save button. Helpful / Not helpful / Report buttons wrap cleanly and the Study Assistant link has its own spaced row.
 - Expanded discussion questions now show their replies and provide a reply form for signed-in users. Replies are sent to `post_replies` and posting errors are displayed. Signed-out visitors can read replies and are prompted to sign in to respond.
 - Class creation is limited to **approved teachers and admins**. Other logged-in users can join a class or submit a teacher application with a teaching statement. Admins can approve or reject pending applications from the Admin page. The approval record is the teacher **rank**; applicants cannot approve their own application or assign themselves a classroom-teacher membership through the database.
@@ -32,7 +33,7 @@ The AI key is deliberately absent from the public website. Complete these server
    - `STUDY_AI_WORKER_URL` = `https://ap-study-hub-ai.rehan-nabeel19.workers.dev`
    - `STUDY_AI_API_KEY` = the same private `study_sk_...` key stored in Cloudflare
    - Optional `SITE_ORIGINS` = the exact published site origin. Omit it during initial testing to allow authenticated requests from any origin.
-4. In Cloudflare, keep the `AI` binding and `STUDY_AI_API_KEY` secret. Deploy the corrected `worker.js` from the separately supplied Cloudflare Worker package.
+4. In Cloudflare, keep the `AI` binding and `STUDY_AI_API_KEY` secret. Deploy the hardened v3 `worker.js` from the separately supplied Cloudflare Worker package. This replacement is required to fix malformed equations, weak quiz distractors and one-attempt generation failures.
 
 Never place `STUDY_AI_API_KEY`, a Supabase secret/service-role key or a Cloudflare token in `assets/config.js`, HTML or browser JavaScript. Only the existing Supabase publishable key belongs in browser code.
 
