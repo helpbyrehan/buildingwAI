@@ -452,6 +452,24 @@
       .forEach(x=>o.observe(x));
   }
   
+  function ensureStudyAiNavigation(){
+    const primary=$('.navlinks');
+    if(primary&&!$('[data-study-ai-link]',primary)){
+      const studyAi=document.createElement('a');
+      studyAi.href=baseHref()+'assistant/';
+      studyAi.textContent='Study AI';
+      studyAi.dataset.studyAiLink='';
+      if(/\/assistant\/?$/.test(location.pathname)){
+        studyAi.classList.add('active');
+        studyAi.setAttribute('aria-current','page');
+      }
+      primary.insertBefore(
+        studyAi,
+        $('[data-mobile-auth]',primary)||null
+      );
+    }
+  }
+
   function nav(){
     const menu=$('#menuBtn');
     const n=$('.nav');
@@ -520,6 +538,10 @@
   
               <a href="${baseHref()}saved/">
                 Saved
+              </a>
+
+              <a href="${baseHref()}assistant/">
+                Study AI
               </a>
   
               <a href="${baseHref()}profile/#uploads">
@@ -2577,6 +2599,8 @@
   async function init(){
   
     theme();
+
+    ensureStudyAiNavigation();
   
     await initSupabase();
   

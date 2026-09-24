@@ -53,6 +53,16 @@
         const box=document.createElement('div');box.className='mobile-auth';box.dataset.mobileAuth='';nav.append(box);
       }
     });
+
+    $$('.hub-nav').forEach(nav=>{
+      const existing=$$('a',nav).find(link=>/\/assistant\/?(?:[?#].*)?$/.test(link.getAttribute('href')||''));
+      if(existing)return;
+      const a=document.createElement('a');
+      a.href=root()+'assistant/';
+      a.textContent='Study AI';
+      const community=$$('a',nav).find(link=>/\/community\/?(?:[?#].*)?$/.test(link.getAttribute('href')||''));
+      nav.insertBefore(a,community||null);
+    });
   }
 
   function showSetup(){
