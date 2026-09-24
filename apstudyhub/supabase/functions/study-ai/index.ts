@@ -78,6 +78,7 @@ Deno.serve(async (request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   const workerUrl = Deno.env.get("STUDY_AI_WORKER_URL") || "";
   const workerKey = Deno.env.get("STUDY_AI_API_KEY") || "";
   if (!supabaseUrl || !supabaseAnonKey || !workerUrl || !workerKey) {
@@ -136,6 +137,17 @@ Deno.serve(async (request) => {
     );
   }
 
+  let refunded = false;
+  const refundUsage = async () => {
+    if (refunded || !supabaseServiceKey) return;
+    refunded = true;
+    const service = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { error } = await service.rpc("refund_study_ai_request", { target_user_id: authData.user.id });
+    if (error) console.error("Could not refund failed Study AI request", { userId: authData.user.id, error: error.message });
+  };
+
   try {
     const response = await fetch(normalizeWorkerUrl(workerUrl), {
       method: "POST",
@@ -151,6 +163,7 @@ Deno.serve(async (request) => {
     const result = await response.json().catch(() => null);
     if (!response.ok || !result) {
       console.error("Study AI Worker failed", { status: response.status, requestId: result?.request_id || null });
+      await refundUsage();
       const workerDetail = typeof result?.detail === "string" && result.detail.length <= 240
         ? result.detail
         : "Study AI could not complete this request. Please try again.";
@@ -158,11 +171,13 @@ Deno.serve(async (request) => {
     }
     if (!isValidWorkerResult(result, mode, count)) {
       console.error("Study AI Worker returned an invalid response", { requestId: result?.request_id || null, mode });
+      await refundUsage();
       return json(request, { detail: "Study AI returned an unsafe or incomplete result. Please try again." }, 502);
     }
     return json(request, { ...result, usage });
   } catch (error) {
     console.error("Study AI request failed", { error: String(error) });
+    await refundUsage();
     return json(request, { detail: "Study AI is temporarily unavailable. Please try again." }, 502);
   }
 });

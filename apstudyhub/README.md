@@ -7,6 +7,7 @@ Static HTML/CSS/JavaScript site using GitHub Pages and an existing Supabase proj
 - Replaced the browser-only Study Assistant draft generator with the authenticated AP Study Hub AI service. Signed-in students can create structured summaries, self-checking quizzes and revealable flashcards without exposing the Cloudflare API key in public website code.
 - Added an atomic five-generations-per-user daily limit, a Supabase Edge Function gateway, strict note and output limits, responsive Study AI layouts, loading/error states, character counting and copy controls.
 - Hardened Study AI generation with strict server-side response checks, duplicate-question and duplicate-choice detection, formula/control-character cleanup, stronger AP-style assessment instructions, prompt-injection resistance, and an automatic repair attempt. The browser also cleans unsafe control characters as a final display safeguard.
+- Live-account testing fixes duplicate Supabase clients, duplicate mobile/menu links, duplicate Study AI tabs, unnecessary homepage/Assistant database requests, and slow-loading feedback. Quiz generation now uses Cloudflare's Llama 3.3 70B fast model with semantic checks for near-duplicate questions, equivalent correct formulas, and incomplete numerical questions. Failed upstream generations are refunded rather than consuming a student's daily allowance.
 - The resource-quality section is now a separate block **below** the resource details and preview, rather than accidentally inserted into the small row containing the Save button. Helpful / Not helpful / Report buttons wrap cleanly and the Study Assistant link has its own spaced row.
 - Expanded discussion questions now show their replies and provide a reply form for signed-in users. Replies are sent to `post_replies` and posting errors are displayed. Signed-out visitors can read replies and are prompted to sign in to respond.
 - Class creation is limited to **approved teachers and admins**. Other logged-in users can join a class or submit a teacher application with a teaching statement. Admins can approve or reject pending applications from the Admin page. The approval record is the teacher **rank**; applicants cannot approve their own application or assign themselves a classroom-teacher membership through the database.
@@ -27,7 +28,7 @@ The older ZIP's README referred to a `schema-patch.sql` file that was **not incl
 
 The AI key is deliberately absent from the public website. Complete these server-side steps before publishing the new Assistant page:
 
-1. Run `study-ai-setup.sql` in the Supabase SQL Editor. It creates only the daily AI usage table and its protected atomic quota function, and is safe to run repeatedly.
+1. Run `study-ai-setup.sql` in the Supabase SQL Editor. It creates only the daily AI usage table and its protected atomic quota/refund functions, and is safe to run repeatedly. Run the updated file again when upgrading from an earlier Study AI package so failed requests can be refunded securely.
 2. In **Supabase → Edge Functions → Deploy a new function → Via Editor**, create a function named `study-ai`. Replace the template with `supabase/functions/study-ai/index.ts` and deploy it. Keep JWT verification enabled.
 3. In **Supabase → Edge Functions → Secrets**, create:
    - `STUDY_AI_WORKER_URL` = `https://ap-study-hub-ai.rehan-nabeel19.workers.dev`

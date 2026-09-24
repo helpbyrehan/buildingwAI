@@ -2,6 +2,7 @@
   'use strict';
 
   const CFG=window.AP_STUDY_HUB_CONFIG||{};
+  const runtime=window.AP_STUDY_HUB_RUNTIME||(window.AP_STUDY_HUB_RUNTIME={});
   const configured=!!(CFG.SUPABASE_URL&&CFG.SUPABASE_KEY&&window.supabase);
   const $=(s,r=document)=>r.querySelector(s);
   const $$=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -25,12 +26,22 @@
 
   async function boot(){
     enhanceNavigation();
+    const featurePage=$('[data-dashboard],[data-planner],[data-practice],[data-community],[data-classes],[data-assistant],[data-resource-page],[data-admin]');
+    if(!featurePage)return;
     if(!configured){showSetup();return;}
-    db=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_KEY);
-    const auth=await db.auth.getUser();
-    user=auth.data.user||null;
-    const c=await db.from('courses').select('*').order('name');
-    courses=c.data||[];
+    db=runtime.supabaseClient||window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_KEY);
+    runtime.supabaseClient=db;
+    if(!runtime.userPromise){
+      runtime.userPromise=db.auth.getUser()
+        .then(auth=>auth.data.user||null)
+        .catch(error=>{console.warn(error);return null;});
+    }
+    user=await runtime.userPromise;
+    const needsCourses=$('[data-dashboard],[data-planner],[data-practice],[data-community],[data-classes]');
+    if(needsCourses){
+      const c=await db.from('courses').select('*').order('name');
+      courses=c.data||[];
+    }
     if($('[data-dashboard]'))await dashboardPage();
     if($('[data-planner]'))await plannerPage();
     if($('[data-practice]'))await practicePage();
@@ -54,15 +65,6 @@
       }
     });
 
-    $$('.hub-nav').forEach(nav=>{
-      const existing=$$('a',nav).find(link=>/\/assistant\/?(?:[?#].*)?$/.test(link.getAttribute('href')||''));
-      if(existing)return;
-      const a=document.createElement('a');
-      a.href=root()+'assistant/';
-      a.textContent='Study AI';
-      const community=$$('a',nav).find(link=>/\/community\/?(?:[?#].*)?$/.test(link.getAttribute('href')||''));
-      nav.insertBefore(a,community||null);
-    });
   }
 
   function showSetup(){
@@ -375,6 +377,11 @@
       submit.disabled=true;submit.textContent='Study AI is working…';
       output.classList.remove('hide');
       output.innerHTML='<div class="assistant-loading"><span class="assistant-spinner" aria-hidden="true"></span><div><h2>Creating your study aid…</h2><p class="muted">This usually takes a few seconds.</p></div></div>';
+      const progressTimers=[
+        setTimeout(()=>{const p=$('.assistant-loading p',output);if(p)p.textContent='The AI is reading and checking your notes…';},12000),
+        setTimeout(()=>{const p=$('.assistant-loading p',output);if(p)p.textContent='Still working — complex quizzes can take a little longer.';},35000),
+        setTimeout(()=>{const p=$('.assistant-loading p',output);if(p)p.textContent='Running final quality checks…';},65000)
+      ];
 
       const selectedMode=String(fd.get('mode'));
       const selectedCount=Math.max(1,Number(fd.get('count'))||5);
@@ -400,6 +407,7 @@
       }catch(error){
         output.innerHTML=`<div class="empty compact"><h3>Study AI is unavailable</h3><p>${esc(errorMessage(error,'Please try again shortly.'))}</p></div>`;
       }finally{
+        progressTimers.forEach(timer=>clearTimeout(timer));
         submit.disabled=false;submit.textContent='Generate with Study AI';
       }
     };

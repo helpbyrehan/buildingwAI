@@ -2,6 +2,7 @@
   'use strict';
   
   const CFG=window.AP_STUDY_HUB_CONFIG||{};
+  const runtime=window.AP_STUDY_HUB_RUNTIME||(window.AP_STUDY_HUB_RUNTIME={});
   
   const hasConfig=!!(
     CFG.SUPABASE_URL &&
@@ -145,23 +146,30 @@
   async function initSupabase(){
     if(!hasConfig||!window.supabase)return;
   
-    sb=window.supabase.createClient(
+    sb=runtime.supabaseClient||window.supabase.createClient(
       CFG.SUPABASE_URL,
       CFG.SUPABASE_KEY
     );
-  
-    const r=await sb.auth.getUser();
-  
-    user=r.data.user||null;
+    runtime.supabaseClient=sb;
+
+    if(!runtime.userPromise){
+      runtime.userPromise=sb.auth.getUser()
+        .then(r=>r.data.user||null)
+        .catch(error=>{console.warn(error);return null;});
+    }
+    user=await runtime.userPromise;
   
     if(user){
-      const p=await sb
-        .from('profiles')
-        .select('*')
-        .eq('id',user.id)
-        .maybeSingle();
-  
-      profile=p.data||null;
+      if(!runtime.profilePromise){
+        runtime.profilePromise=Promise.resolve(sb
+          .from('profiles')
+          .select('*')
+          .eq('id',user.id)
+          .maybeSingle())
+          .then(p=>p.data||null)
+          .catch(error=>{console.warn(error);return null;});
+      }
+      profile=await runtime.profilePromise;
     }
   }
   
@@ -204,6 +212,33 @@
       subjects:s.data||[],
       courses:c.data||[],
       resources:r.data||[]
+    };
+  }
+
+  async function homeData(){
+    if(!sb)return {...emptyData,resourceCount:0};
+
+    const [subjects,courses,featured,count]=await Promise.all([
+      sb.from('subjects').select('*').order('name'),
+      sb.from('courses').select('*').order('name'),
+      sb.from('resources')
+        .select('*, subjects(name,slug), courses(name,slug)')
+        .eq('status','approved')
+        .eq('featured',true)
+        .order('created_at',{ascending:false})
+        .limit(3),
+      sb.from('resources')
+        .select('id',{count:'exact',head:true})
+        .eq('status','approved')
+    ]);
+
+    const error=subjects.error||courses.error||featured.error||count.error;
+    if(error)console.warn(error);
+    return {
+      subjects:subjects.data||[],
+      courses:courses.data||[],
+      resources:featured.data||[],
+      resourceCount:count.count||0
     };
   }
   
@@ -454,7 +489,18 @@
   
   function ensureStudyAiNavigation(){
     const primary=$('.navlinks');
-    if(primary&&!$('[data-study-ai-link]',primary)){
+    if(!primary)return;
+
+    const hasHub=$$('a',primary).some(link=>/\/(dashboard|hub)\/?(?:[?#].*)?$/.test(link.getAttribute('href')||''));
+    if(!hasHub){
+      const hub=document.createElement('a');
+      hub.href=baseHref()+'dashboard/';
+      hub.textContent='My Hub';
+      hub.dataset.hubLink='';
+      primary.insertBefore(hub,primary.firstChild);
+    }
+
+    if(!$('[data-study-ai-link]',primary)){
       const studyAi=document.createElement('a');
       studyAi.href=baseHref()+'assistant/';
       studyAi.textContent='Study AI';
@@ -504,7 +550,6 @@
         if(mobileAuth){
           mobileAuth.innerHTML=`
             <a href="${baseHref()}profile/">Profile</a>
-            <a href="${baseHref()}saved/">Saved</a>
             <a href="${baseHref()}settings/">Settings</a>
           `;
         }
@@ -639,7 +684,7 @@
   }
   
   async function homePage(){
-    const d=await data();
+    const d=await homeData();
   
     const courses=$('[data-courses]');
     const featured=$('[data-featured]');
@@ -709,7 +754,7 @@
     const r=$('[data-stat-resources]');
   
     if(c)c.textContent=d.courses.length;
-    if(r)r.textContent=d.resources.length;
+    if(r)r.textContent=d.resourceCount;
   }
   
   function scoreResource(r,d,terms){
