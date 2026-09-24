@@ -4,6 +4,8 @@ Static HTML/CSS/JavaScript site using GitHub Pages and an existing Supabase proj
 
 ## Corrections in this package
 
+- Replaced the browser-only Study Assistant draft generator with the authenticated AP Study Hub AI service. Signed-in students can create structured summaries, self-checking quizzes and revealable flashcards without exposing the Cloudflare API key in public website code.
+- Added an atomic five-generations-per-user daily limit, a Supabase Edge Function gateway, strict note and output limits, responsive Study AI layouts, loading/error states, character counting and copy controls.
 - The resource-quality section is now a separate block **below** the resource details and preview, rather than accidentally inserted into the small row containing the Save button. Helpful / Not helpful / Report buttons wrap cleanly and the Study Assistant link has its own spaced row.
 - Expanded discussion questions now show their replies and provide a reply form for signed-in users. Replies are sent to `post_replies` and posting errors are displayed. Signed-out visitors can read replies and are prompted to sign in to respond.
 - Class creation is limited to **approved teachers and admins**. Other logged-in users can join a class or submit a teacher application with a teaching statement. Admins can approve or reject pending applications from the Admin page. The approval record is the teacher **rank**; applicants cannot approve their own application or assign themselves a classroom-teacher membership through the database.
@@ -20,12 +22,27 @@ The migration requires a working `public.is_admin()` function and assumes existi
 
 The older ZIP's README referred to a `schema-patch.sql` file that was **not included in the ZIP**. This package does not claim that file was run or silently recreate your original base database. If core `saved_resources`, profile write, storage delete or account-delete infrastructure is missing in your Supabase project, those features still require a schema review before launch. You can verify these in the Supabase dashboard or supply the current schema to complete a migration safely.
 
+## Study AI deployment
+
+The AI key is deliberately absent from the public website. Complete these server-side steps before publishing the new Assistant page:
+
+1. Run `study-ai-setup.sql` in the Supabase SQL Editor. It creates only the daily AI usage table and its protected atomic quota function, and is safe to run repeatedly.
+2. In **Supabase → Edge Functions → Deploy a new function → Via Editor**, create a function named `study-ai`. Replace the template with `supabase/functions/study-ai/index.ts` and deploy it. Keep JWT verification enabled.
+3. In **Supabase → Edge Functions → Secrets**, create:
+   - `STUDY_AI_WORKER_URL` = `https://ap-study-hub-ai.rehan-nabeel19.workers.dev`
+   - `STUDY_AI_API_KEY` = the same private `study_sk_...` key stored in Cloudflare
+   - Optional `SITE_ORIGINS` = the exact published site origin. Omit it during initial testing to allow authenticated requests from any origin.
+4. In Cloudflare, keep the `AI` binding and `STUDY_AI_API_KEY` secret. Deploy the corrected `worker.js` from the separately supplied Cloudflare Worker package.
+
+Never place `STUDY_AI_API_KEY`, a Supabase secret/service-role key or a Cloudflare token in `assets/config.js`, HTML or browser JavaScript. Only the existing Supabase publishable key belongs in browser code.
+
 ## Checks before public launch
 
-1. Deploy the edited files and run the appropriate Supabase migration; do not just upload the ZIP and expect database permissions to change.
+1. Deploy the edited files, run the appropriate Supabase migrations, deploy the `study-ai` Edge Function, and configure its secrets; do not just upload the ZIP and expect server-side permissions to change.
 2. Test real student, pending applicant, approved teacher, and admin accounts: students can join a class but cannot create one, approve their application or assign themselves teacher membership; approved teachers and admins can create classes; admin review changes application status.
 3. Post a community question, reply with another account, refresh, and verify the reply is visible. Rate and report an approved resource. Check the resource layout at 320, 375, 430, 768 and 1280px widths.
 4. Verify sign-up, login, password reset, Save, PDF upload/open/remove, profile edits and account deletion against the live Supabase project. Confirm private classroom posts and uploaded files cannot be accessed by unauthorized accounts.
-5. Replace the placeholder support/copyright contact on `policies/index.html`, configure live support/moderation, and review all published practice questions and external-resource permissions.
+5. Log in as a student and generate a summary, quiz and flashcard set. Confirm the sixth generation on the same UTC day is rejected, the private Cloudflare key is absent from browser source, and signed-out users cannot use the function.
+6. Replace the placeholder support/copyright contact on `policies/index.html`, configure live support/moderation, and review all published practice questions and external-resource permissions.
 
 **Verification limits:** JavaScript syntax, CSS parsing, HTML references and code paths can be checked offline. Live Supabase access, deployed GitHub Pages configuration, real authenticated permissions, payment or email delivery (if added separately), and actual production browser behavior cannot be guaranteed by inspection of a ZIP. Do not declare the live service production-ready until the above checks pass.

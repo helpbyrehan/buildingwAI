@@ -43,7 +43,8 @@
 
   function enhanceNavigation(){
     $$('.navlinks').forEach(nav=>{
-      if(!$('[data-hub-link]',nav)){
+      const hasHubLink=$$('a',nav).some(link=>/\/(dashboard|hub)\/?(?:[?#].*)?$/.test(link.getAttribute('href')||''));
+      if(!$('[data-hub-link]',nav)&&!hasHubLink){
         const a=document.createElement('a');
         a.href=root()+'dashboard/';a.dataset.hubLink='';a.textContent='My Hub';
         nav.insertBefore(a,nav.firstChild);
@@ -324,24 +325,105 @@
   }
 
   function assistantPage(){
+    if(!authRequired())return;
+    const form=$('#assistantForm'),output=$('#assistantOutput'),submit=$('#assistantSubmit');
+    const notes=$('#assistantNotes'),mode=$('#assistantMode'),count=$('#assistantCount');
+    const countLabel=$('#assistantCountLabel'),characterCount=$('#assistantCharacterCount');
     const resource=new URLSearchParams(location.search).get('resource');
     if(resource)$('#assistantTopic').value=resource;
-    const sentences=text=>text.replace(/\s+/g,' ').split(/(?<=[.!?])\s+/).filter(x=>x.length>20);
-    const keywords=text=>{
-      const stop=new Set('about after again also because been before being between could every first from have into just more most other over should some such than that their them then there these they this through very what when where which while will with would your'.split(' '));
-      const counts={};(text.toLowerCase().match(/[a-z][a-z-]{3,}/g)||[]).forEach(w=>{if(!stop.has(w))counts[w]=(counts[w]||0)+1;});
-      return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0]);
+
+    const syncCountField=()=>{
+      if(mode.value==='summary'){
+        countLabel.textContent='Summary sentences';count.min='2';count.max='10';
+        if(Number(count.value)<2||Number(count.value)>10)count.value='5';
+      }else if(mode.value==='quiz'){
+        countLabel.textContent='Questions';count.min='1';count.max='10';
+        if(Number(count.value)<1||Number(count.value)>10)count.value='5';
+      }else{
+        countLabel.textContent='Flashcards';count.min='1';count.max='20';
+        if(Number(count.value)<1||Number(count.value)>20)count.value='8';
+      }
     };
-    $('#assistantForm').onsubmit=e=>{
-      e.preventDefault();const fd=new FormData(e.currentTarget),text=String(fd.get('notes')||'').trim(),mode=fd.get('mode'),topic=fd.get('topic')||'your topic';
-      if(text.length<40){notify('Add at least a few sentences of notes.','error');return;}
-      const s=sentences(text),keys=keywords(text);let html='';
-      if(mode==='summary')html=`<h2>Focused summary</h2><p>${esc((s.slice(0,Math.min(4,s.length)).join(' ')||text).slice(0,900))}</p><div class="chips">${keys.map(k=>`<span class="chip">${esc(k)}</span>`).join('')}</div>`;
-      if(mode==='explain')html=`<h2>Explain ${esc(topic)}</h2><p>Start with this core idea: ${esc(s[0]||text.slice(0,400))}</p><p class="muted">Connect it to ${esc(keys.slice(0,3).join(', ')||'the main terms')}. Then explain one cause, one effect, and one concrete example in your own words.</p>`;
-      if(mode==='quiz')html=`<h2>Self-quiz</h2><ol>${(keys.length?keys:['main idea','evidence','application']).slice(0,6).map((k,i)=>`<li>${i%2?`How does ${esc(k)} connect to ${esc(keys[0]||topic)}?`:`Define ${esc(k)} without looking at your notes, then give an example.`}</li>`).join('')}</ol>`;
-      if(mode==='cards')html=`<h2>Flashcard draft</h2>${(keys.length?keys:['main idea']).slice(0,8).map(k=>`<div class="list-row"><span><strong>${esc(k)}</strong><small>Write the definition, importance, and one example from your notes.</small></span></div>`).join('')}`;
-      $('#assistantOutput').innerHTML=html;$('#assistantOutput').classList.remove('hide');
+    const syncCharacterCount=()=>{characterCount.textContent=`${notes.value.length.toLocaleString()} / 12,000`;};
+    mode.onchange=syncCountField;notes.oninput=syncCharacterCount;syncCountField();syncCharacterCount();
+
+    form.onsubmit=async e=>{
+      e.preventDefault();
+      const fd=new FormData(form),content=String(fd.get('notes')||'').trim();
+      if(content.length<40){notify('Add at least 40 characters of notes.','error');notes.focus();return;}
+      if(content.length>12000){notify('Shorten the notes to 12,000 characters or fewer.','error');notes.focus();return;}
+
+      submit.disabled=true;submit.textContent='Study AI is working…';
+      output.classList.remove('hide');
+      output.innerHTML='<div class="assistant-loading"><span class="assistant-spinner" aria-hidden="true"></span><div><h2>Creating your study aid…</h2><p class="muted">This usually takes a few seconds.</p></div></div>';
+
+      const selectedMode=String(fd.get('mode'));
+      const selectedCount=Math.max(1,Number(fd.get('count'))||5);
+      const requestBody={
+        mode:selectedMode,
+        course:String(fd.get('topic')||'General').trim(),
+        content,
+        options:{
+          difficulty:String(fd.get('difficulty')||'medium'),
+          count:selectedCount,
+          max_summary_sentences:selectedMode==='summary'?selectedCount:5
+        }
+      };
+
+      try{
+        const response=await db.functions.invoke('study-ai',{body:requestBody});
+        if(response.error){
+          let message=response.error.message||'Study AI could not complete this request.';
+          try{const details=await response.error.context?.json();message=details?.detail||message;}catch(_error){}
+          throw new Error(message);
+        }
+        renderAssistantResult(response.data);
+      }catch(error){
+        output.innerHTML=`<div class="empty compact"><h3>Study AI is unavailable</h3><p>${esc(errorMessage(error,'Please try again shortly.'))}</p></div>`;
+      }finally{
+        submit.disabled=false;submit.textContent='Generate with Study AI';
+      }
     };
+
+    function renderAssistantResult(payload){
+      const result=payload?.result||{};
+      const remaining=payload?.usage?.remaining;
+      let body='';
+
+      if(result.mode==='summary'){
+        const terms=(result.key_terms||[]).map(item=>`<div class="ai-term"><strong>${esc(item.term)}</strong><span>${esc(item.definition)}</span></div>`).join('');
+        body=`<div class="eyebrow">Focused summary</div><h2>${esc(result.title||'Your summary')}</h2><p class="ai-summary">${esc(result.summary||'')}</p>${terms?`<div class="ai-terms"><h3>Key terms</h3>${terms}</div>`:''}`;
+      }else if(result.mode==='quiz'){
+        const questions=(result.questions||[]).map((question,index)=>`<section class="ai-question" data-quiz-question><h3><span>${index+1}</span>${esc(question.question)}</h3><div class="ai-choices">${(question.choices||[]).map((choice,choiceIndex)=>`<button class="ai-choice" type="button" data-choice="${choiceIndex}" data-correct="${question.correct_index}">${esc(choice)}</button>`).join('')}</div><p class="ai-explanation hide">${esc(question.explanation)}</p></section>`).join('');
+        body=`<div class="eyebrow">Self-checking quiz</div><h2>${esc(result.title||'Your quiz')}</h2>${questions}`;
+      }else if(result.mode==='flashcards'){
+        const cards=(result.cards||[]).map((card,index)=>`<details class="ai-card"><summary><span>Card ${index+1}</span>${esc(card.front)}</summary><div>${esc(card.back)}</div></details>`).join('');
+        body=`<div class="eyebrow">Flashcards</div><h2>${esc(result.title||'Your flashcards')}</h2><p class="muted">Tap a card to reveal the answer.</p>${cards}`;
+      }else{
+        throw new Error('Study AI returned an unfamiliar response.');
+      }
+
+      const warnings=(result.warnings||[]).map(warning=>`<li>${esc(warning)}</li>`).join('');
+      output.innerHTML=`${body}${warnings?`<div class="ai-warning"><strong>Check the source</strong><ul>${warnings}</ul></div>`:''}<div class="ai-result-footer"><span>${Number.isInteger(remaining)?`${remaining} generation${remaining===1?'':'s'} left today`:'Generated by AP Study Hub AI'}</span><button class="btn btn-secondary btn-small" type="button" id="copyAssistantResult">Copy result</button></div>`;
+
+      $$('[data-quiz-question]',output).forEach(question=>{
+        $$('.ai-choice',question).forEach(choice=>choice.onclick=()=>{
+          if(question.dataset.answered)return;
+          question.dataset.answered='true';
+          const chosen=Number(choice.dataset.choice),correct=Number(choice.dataset.correct);
+          $$('.ai-choice',question).forEach((button,index)=>{
+            button.disabled=true;
+            if(index===correct)button.classList.add('correct');
+            else if(index===chosen)button.classList.add('incorrect');
+          });
+          $('.ai-explanation',question)?.classList.remove('hide');
+        });
+      });
+      $('#copyAssistantResult').onclick=async()=>{
+        try{await navigator.clipboard.writeText(output.innerText.replace(/Copy result\s*$/,'').trim());notify('Study aid copied','success');}
+        catch(_error){notify('Could not copy automatically. Select the result and copy it manually.','error');}
+      };
+    }
   }
 
   document.addEventListener('DOMContentLoaded',()=>boot().catch(err=>notify(errorMessage(err),'error')));

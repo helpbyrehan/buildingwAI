@@ -1,1 +1,84 @@
-<!doctype html><html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Turn your own AP notes into summaries, explanations, self-quizzes, and flashcard drafts."><title>Study Assistant | AP Study Hub</title><link rel="icon" href="../assets/favicon.svg"><link rel="stylesheet" href="../assets/styles.css?v=20260922ready"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.APSH_BASE='../';</script><script src="../assets/config.js"></script><script defer src="../assets/app.js?v=20260922ready"></script><script defer src="../assets/hub.js?v=20260922ready"></script></head><body><a class="skip" href="#main">Skip to content</a><header class="topbar"><div class="container nav"><a class="brand" href="../"><img class="mark" src="../assets/logo.svg" alt=""><strong>AP STUDY HUB <span>· assistant</span></strong></a><button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false">☰</button><nav class="navlinks"><a href="../browse/">Search</a><a href="../courses/">Courses</a><a href="../practice/">Practice</a><a href="../dashboard/">My Hub</a><div class="mobile-auth" data-mobile-auth></div></nav><div class="nav-actions"><span data-user-slot></span><button class="icon-btn" id="themeBtn" aria-label="Toggle theme">☼</button></div></div></header><main id="main" data-assistant><div class="container hub-shell"><div class="hub-intro"><div><div class="eyebrow">Private, in-browser study tools</div><h1>Study assistant.</h1></div><p>Paste notes you are allowed to use, then turn them into a focused summary, explanation outline, self-quiz, or flashcard draft. Your pasted text stays in this browser and is not saved.</p></div><nav class="hub-nav"><a href="../dashboard/">Overview</a><a href="../planner/">Planner</a><a href="../practice/">Practice</a><a class="active" href="./">Assistant</a><a href="../community/">Community</a></nav><div id="hubNotice" class="notice hide"></div><div class="dashboard-grid"><form id="assistantForm" class="panel"><div class="field"><label for="assistantTopic">Topic or resource</label><input class="input" id="assistantTopic" name="topic" maxlength="140" placeholder="AP Biology Unit 3"></div><div class="field"><label for="assistantNotes">Your notes</label><textarea class="textarea" id="assistantNotes" name="notes" minlength="40" maxlength="15000" placeholder="Paste your own notes here…" required style="min-height:260px"></textarea></div><div class="field"><label for="assistantMode">Study tool</label><select class="select" id="assistantMode" name="mode"><option value="summary">Focused summary</option><option value="explain">Explanation outline</option><option value="quiz">Self-quiz questions</option><option value="cards">Flashcard draft</option></select></div><button class="btn btn-primary" type="submit">Create study aid</button></form><aside><div id="assistantOutput" class="panel hide" aria-live="polite"></div><div class="panel"><div class="eyebrow">Important</div><h2>Check the source.</h2><p class="muted">This tool reorganizes your text; it does not verify factual accuracy. Compare every result with your course materials.</p></div></aside></div></div></main><footer class="footer"><div class="container footer-row"><span>AP Study Hub</span><span><a href="../policies/">Privacy · Safety · Guidelines</a></span></div></footer><div id="toast" class="toast"></div></body></html>
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Turn your AP notes into AI-generated summaries, quizzes, and flashcards.">
+  <title>Study AI | AP Study Hub</title>
+  <link rel="icon" href="../assets/favicon.svg">
+  <link rel="stylesheet" href="../assets/styles.css?v=20260924ai">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>window.APSH_BASE='../';</script>
+  <script src="../assets/config.js"></script>
+  <script defer src="../assets/app.js?v=20260924ai"></script>
+  <script defer src="../assets/hub.js?v=20260924ai"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="../"><img class="mark" src="../assets/logo.svg" alt=""><strong>AP STUDY HUB <span>· study AI</span></strong></a>
+      <button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false">☰</button>
+      <nav class="navlinks"><a href="../browse/">Search</a><a href="../courses/">Courses</a><a href="../practice/">Practice</a><a href="../dashboard/">My Hub</a><div class="mobile-auth" data-mobile-auth></div></nav>
+      <div class="nav-actions"><span data-user-slot></span><button class="icon-btn" id="themeBtn" aria-label="Toggle theme">☼</button></div>
+    </div>
+  </header>
+  <main id="main" data-assistant data-auth-area>
+    <div class="container hub-shell">
+      <div class="hub-intro">
+        <div><div class="eyebrow">Powered by AP Study Hub AI</div><h1>Study AI.</h1></div>
+        <p>Turn notes you are allowed to use into a focused summary, a self-checking quiz, or flashcards. AI can make mistakes, so compare results with your course materials.</p>
+      </div>
+      <nav class="hub-nav"><a href="../dashboard/">Overview</a><a href="../planner/">Planner</a><a href="../practice/">Practice</a><a class="active" href="./">Study AI</a><a href="../community/">Community</a></nav>
+      <div id="hubNotice" class="notice hide"></div>
+      <div class="assistant-layout">
+        <form id="assistantForm" class="panel assistant-form">
+          <div class="field">
+            <label for="assistantTopic">Course or topic</label>
+            <input class="input" id="assistantTopic" name="topic" maxlength="120" placeholder="AP Biology · Cellular respiration" required>
+          </div>
+          <div class="field">
+            <label for="assistantNotes">Your notes</label>
+            <textarea class="textarea" id="assistantNotes" name="notes" minlength="40" maxlength="12000" placeholder="Paste your notes here…" required></textarea>
+            <div class="field-meta"><span>40–12,000 characters</span><span id="assistantCharacterCount">0 / 12,000</span></div>
+          </div>
+          <div class="assistant-options">
+            <div class="field">
+              <label for="assistantMode">Study tool</label>
+              <select class="select" id="assistantMode" name="mode">
+                <option value="summary">Focused summary</option>
+                <option value="quiz">Self-checking quiz</option>
+                <option value="flashcards">Flashcards</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="assistantDifficulty">Difficulty</label>
+              <select class="select" id="assistantDifficulty" name="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            <div class="field" id="assistantCountField">
+              <label for="assistantCount" id="assistantCountLabel">Summary sentences</label>
+              <input class="input" id="assistantCount" name="count" type="number" min="2" max="10" value="5" inputmode="numeric">
+            </div>
+          </div>
+          <button class="btn btn-primary assistant-submit" id="assistantSubmit" type="submit">Generate with Study AI</button>
+          <p class="help assistant-privacy">Your notes are sent securely for this request and are not saved to your AP Study Hub profile. Five AI generations are available per account each day.</p>
+        </form>
+        <aside class="assistant-results">
+          <div id="assistantOutput" class="panel assistant-output hide" aria-live="polite"></div>
+          <div class="panel">
+            <div class="eyebrow">Use AI responsibly</div>
+            <h2>Check before you study.</h2>
+            <p class="muted">Study AI works from the notes you provide, but it may still misunderstand or phrase something poorly. Verify important facts against your teacher or course materials.</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+  <footer class="footer"><div class="container footer-row"><span>AP Study Hub</span><span><a href="../policies/">Privacy · Safety · Guidelines</a></span></div></footer>
+  <div id="toast" class="toast"></div>
+</body>
+</html>
