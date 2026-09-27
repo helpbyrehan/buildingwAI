@@ -105,6 +105,8 @@ Deno.serve(async (request) => {
     return json(request, { detail: "Request body must be valid JSON." }, 400);
   }
 
+  if (!isRecord(body)) return json(request, { detail: "Request body must be a JSON object." }, 400);
+
   const mode = typeof body.mode === "string" ? body.mode : "";
   const course = typeof body.course === "string" ? body.course.trim() : "General";
   const content = typeof body.content === "string" ? body.content.trim() : "";
@@ -166,7 +168,7 @@ Deno.serve(async (request) => {
       await refundUsage();
       const workerDetail = typeof result?.detail === "string" && result.detail.length <= 240
         ? result.detail
-        : "Study AI could not complete this request. Please try again.";
+        : `Study AI provider returned an unusable response (HTTP ${response.status}). Please try again.`;
       return json(request, { detail: response.status === 429 ? "Study AI’s free daily capacity has been reached. Try again tomorrow." : workerDetail }, response.status === 429 ? 429 : 502);
     }
     if (!isValidWorkerResult(result, mode, count)) {

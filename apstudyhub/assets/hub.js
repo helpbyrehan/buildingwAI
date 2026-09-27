@@ -397,10 +397,10 @@
       };
 
       try{
-        const response=await db.functions.invoke('study-ai',{body:requestBody});
+        const response=await db.functions.invoke('study-ai',{body:requestBody,timeout:100000});
         if(response.error){
           let message=response.error.message||'Study AI could not complete this request.';
-          try{const details=await response.error.context?.json();message=details?.detail||message;}catch(_error){}
+          try{const details=await response.error.context?.json();message=details?.detail||details?.message||details?.msg||message;}catch(_error){}
           throw new Error(message);
         }
         renderAssistantResult(response.data);
