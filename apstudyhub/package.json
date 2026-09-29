@@ -1,0 +1,13 @@
+{
+  "name": "ap-study-hub",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "test": "node --test tests/*.test.js",
+    "dev": "npx vercel dev"
+  }
+}
