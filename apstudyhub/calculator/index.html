@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Calculate your AP practice score with section weights, named scoring curves, target planning, and all 42 AP subjects.">
+  <meta name="theme-color" content="#eeece6">
+  <title>AP Score Calculator | AP Study Hub</title>
+  <link rel="icon" href="../assets/favicon.svg">
+  <link rel="stylesheet" href="../assets/styles.css?v=20261013calc">
+  <link rel="stylesheet" href="../assets/calculator.css?v=20261013calc">
+  <script>window.APSH_BASE='../';</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/config.js"></script>
+  <script defer src="../assets/app.js?v=20261013calc"></script>
+  <script defer src="../assets/score-models.js?v=20261013calc"></script>
+  <script defer src="../assets/score-engine.js?v=20261013calc"></script>
+  <script defer src="../assets/calculator.js?v=20261013calc"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar"><div class="container nav">
+    <a class="brand" href="../"><img class="mark" src="../assets/logo.svg" alt=""><strong>AP STUDY HUB <span>· score calculator</span></strong></a>
+    <button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false">☰</button>
+    <nav class="navlinks" aria-label="Primary"><a href="../browse/">Search</a><a href="../courses/">Courses</a><a href="../practice/">Practice</a><a href="./" data-score-calculator-link aria-current="page" class="active">Calculator</a><div class="mobile-auth" data-mobile-auth></div></nav>
+    <div class="nav-actions"><span data-user-slot></span><button class="icon-btn" id="themeBtn" aria-label="Toggle theme">◐</button></div>
+  </div></header>
+  <main id="main" data-score-calculator>
+    <section class="calc-hero container">
+      <div><div class="eyebrow">42 subjects · no account needed</div><h1>Know your<br><em>next score.</em></h1></div>
+      <div class="calc-intro"><p>Put your practice scores to work. See the weighted breakdown, explore a scoring curve, and find what it takes to reach your goal.</p><div class="calc-tags"><span>Instant results</span><span>Sources included</span><span>No AI</span></div></div>
+    </section>
+    <section class="container calc-workspace" aria-label="AP score calculator">
+      <div class="calc-setup">
+        <div class="field"><label for="subjectSearch">Find an AP subject</label><input class="input" id="subjectSearch" type="search" placeholder="Physics, calculus, history…" autocomplete="off"></div>
+        <div class="field"><label for="calcSubject">AP subject</label><select class="select" id="calcSubject"></select><span id="subjectCount" class="help"></span></div>
+        <div class="field"><label for="calcModel">Exam format & scoring model</label><select class="select" id="calcModel"></select></div>
+      </div>
+      <div class="calc-layout">
+        <section class="calc-input-panel panel" aria-labelledby="subjectHeading">
+          <div class="calc-section-head"><div><div class="eyebrow">Your practice scores</div><h2 id="subjectHeading">AP Physics 1</h2></div><span id="modelBadge" class="calc-badge"></span></div>
+          <p id="modelNote" class="calc-note"></p>
+          <div class="calc-actions"><button class="btn btn-small" id="loadExample" type="button">Try an example</button><button class="btn btn-small" id="maxScores" type="button">Perfect score</button><button class="btn btn-small" id="resetScores" type="button">Clear</button></div>
+          <div id="scoreFields"></div>
+          <details class="calc-worksheet" id="worksheetDetails"><summary>Use your teacher’s scoring worksheet</summary><p class="help">Enter the minimum composite for each AP score, using the same scale shown in your result. Use a worksheet that matches this exam format.</p><label class="calc-toggle"><input type="checkbox" id="useCustom"> Apply my worksheet cutoffs</label><div class="calc-cutoff-inputs" id="customCutoffFields"></div><div class="field"><label for="customRounding">Worksheet rounding rule</label><select class="select" id="customRounding"><option value="nearest">Round the final composite to the nearest whole point</option><option value="none">Compare the exact composite without rounding</option></select></div><p id="cutoffError" class="calc-error" role="status"></p></details>
+        </section>
+        <aside class="calc-results" aria-label="Score estimate and target plan">
+          <section class="panel calc-result-panel">
+            <div class="calc-section-head"><div class="eyebrow" id="resultLabel">Estimated AP score</div><span id="resultBadge" class="calc-badge">Practice estimate</span></div>
+            <div class="calc-score-line"><strong id="predictedScore">—</strong><span id="scoreSuffix">/ 5</span></div>
+            <p id="resultMessage" class="calc-result-message" role="status" aria-live="polite">Add your section scores to see your result.</p>
+            <div class="calc-composite"><div><span>Weighted composite</span><strong id="compositeScore">—</strong></div><div><span>Weighted percentage</span><strong id="compositePercent">—</strong></div></div>
+            <div id="compositeTrack" class="calc-track" aria-hidden="true"><span id="compositeMarker"></span></div>
+            <div id="scoreBands" class="calc-band-legend"></div>
+            <p id="roundingNote" class="help"></p>
+            <div id="sectionBreakdown" class="calc-breakdown"></div>
+            <div id="comparison" class="calc-comparison"></div>
+            <button class="btn btn-secondary" id="copyResult" type="button" disabled>Copy result</button><span id="copyStatus" class="help" role="status"></span>
+          </section>
+          <section class="panel calc-target-panel"><div class="calc-section-head"><div><div class="eyebrow">Make your next move</div><h2>What do I need?</h2></div><div class="field"><label for="targetScore">Target AP score</label><select class="select" id="targetScore"><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option></select></div></div><p id="targetSummary" class="calc-note">Choose a target to explore the points you need.</p><div id="targetOptions"></div></section>
+        </aside>
+      </div>
+      <section class="calc-method" aria-labelledby="methodHeading"><div><div class="eyebrow">Understand your estimate</div><h2 id="methodHeading">The math.<br>The model.<br>The sources.</h2></div><div><p>Section scores become a weighted composite. A named reference curve then maps that composite to a score from 1 to 5. Exam curves and rubrics can change, so an estimate cannot guarantee your official score.</p><p id="specialNote"></p><ul id="calcSources"></ul><p class="help">Models reviewed 13 October 2026. Your inputs stay in this browser. This tool estimates AP exam scores; it does not calculate your classroom grade. Independent tool; not affiliated with or endorsed by College Board.</p></div></section>
+    </section>
+  </main>
+  <footer class="footer"><div class="container footer-row"><span>AP Study Hub · Built for students, by students.</span><a href="../policies/">Privacy · Safety · Guidelines</a></div></footer><div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

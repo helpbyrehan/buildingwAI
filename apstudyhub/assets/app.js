@@ -500,6 +500,18 @@
       primary.insertBefore(hub,primary.firstChild);
     }
 
+    if(!$('[data-score-calculator-link]',primary)){
+      const calculator=document.createElement('a');
+      calculator.href=baseHref()+'calculator/';
+      calculator.textContent='Calculator';
+      calculator.dataset.scoreCalculatorLink='';
+      if(/\/calculator\/?$/.test(location.pathname)){
+        calculator.classList.add('active');
+        calculator.setAttribute('aria-current','page');
+      }
+      primary.insertBefore(calculator,$('[data-mobile-auth]',primary)||null);
+    }
+
     if(!$('[data-study-ai-link]',primary)){
       const studyAi=document.createElement('a');
       studyAi.href=baseHref()+'assistant/';

@@ -75,3 +75,8 @@ References: [Vercel configuration](https://vercel.com/docs/project-configuration
 Your supplied Worker is your custom AI API, and its model is Cloudflare-hosted Llama. Your custom generation logic now executes on Vercel; the model computation remains on Cloudflare. Vercel cannot execute Cloudflare's `env.AI` binding. The REST adapter calls the same model with the same schemas and settings. A Cloudflare account API token authorizes that model access; your old `study_sk_...` only authenticated callers to your old Worker and cannot authorize model access. No separate Worker deployment is needed.
 
 The website endpoint uses a verified Supabase login instead of the old shared API key, and adds the server-only daily quota. This package does not preserve the old public `/health` and `/v1/generate` endpoints for external clients; the website uses `/api/study-ai`. The old Worker can remain online for other clients until you decide to retire it. The original engine's heuristic checks are preserved, but cannot guarantee scientific accuracy or detect all semantic duplicates.
+
+
+## AP score calculator
+
+The new `calculator/` page covers all 42 subjects with attributed scoring models, live weighted breakdowns, source comparisons, target planning, and teacher worksheet cutoffs. It works as a static page on both deployments. See [SCORE-CALCULATOR.md](SCORE-CALCULATOR.md) for accuracy limits, source provenance, validation, and deployment.
