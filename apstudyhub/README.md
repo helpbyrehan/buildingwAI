@@ -1,6 +1,28 @@
 # AP Study Hub — Vercel deployment
 
-This package preserves the supplied HTML, CSS, navigation and Supabase-backed features. The Study AI browser now calls `POST /api/study-ai` on the same website. Vercel verifies the Supabase session, reserves the daily allowance, builds the AI prompt, calls the model, validates output, retries malformed output once and refunds failed requests. Supabase retains auth/database/storage. Cloudflare Workers AI supplies model inference through its REST API; **no separate Cloudflare Worker or Supabase Edge Function is needed**. No autonomous action-taking agent was present in the supplied site.
+This package preserves the supplied HTML, CSS, navigation and Supabase-backed features. On Vercel, the Study AI browser calls `POST /api/study-ai` on the same website. On GitHub Pages, it calls the HTTPS Vercel endpoint configured in `assets/config.js`. Vercel verifies the Supabase session, reserves the daily allowance, builds the AI prompt, calls the model, validates output, retries malformed output once and refunds failed requests. Supabase retains auth/database/storage. Cloudflare Workers AI supplies model inference through its REST API; **no separate Cloudflare Worker or Supabase Edge Function is needed**. No autonomous action-taking agent was present in the supplied site.
+
+## GitHub Pages assistant fix — 13 October 2026
+
+The deployed page at `https://helpbyrehan.github.io/buildingwAI/apstudyhub/assistant/` posted to `https://helpbyrehan.github.io/api/study-ai`. GitHub Pages cannot run the Node handler in `api/study-ai.js`; that POST returned HTTP 405 with a non-JSON body. The browser then showed only a generic failure. The live `hub.js` and `config.js` matched this repository at commit `3cf5def`.
+
+The actual API is `https://buildingwai-apstudyhub.vercel.app/api/study-ai`. An unauthenticated POST returned JSON HTTP 401, confirming the handler is reachable and enforces login. Its cross-origin OPTIONS preflight returned HTTP 405 without CORS headers, so changing the browser URL alone would still fail.
+
+The fix routes GitHub Pages to that Vercel API, keeps Vercel production/preview pages on their own API, and supports OPTIONS plus exact-origin CORS on the handler. Only `https://helpbyrehan.github.io` is allowed cross-origin by default; same-origin Vercel requests also work. Authentication and daily limits still apply to every generation. The client rejects insecure API addresses, prevents login-token forwarding through redirects, and distinguishes failed connections, timeouts, server errors, and unexpected HTML responses. The assistant's script URLs have updated cache versions.
+
+### Deploy this fix to the existing services
+
+1. Commit and push these changes to `helpbyrehan/buildingwAI` on the branch used by GitHub Pages and Vercel. Include `assets/study-ai-client.js` and its new script tag in `assistant/index.html` together with the other changes. Never commit `.env` files containing credentials.
+2. In the **existing** Vercel project serving `buildingwai-apstudyhub.vercel.app`, verify the Git source is this repository and the Root Directory is `apstudyhub`. Keep framework **Other**, build `npm run build`, and output `public`. Deploy the changed commit to Production; use Redeploy if it does not deploy automatically. A frontend-only GitHub Pages deployment cannot fix the missing API preflight support.
+3. Keep the five server variables in the table below in Vercel. If `STUDY_AI_ALLOWED_ORIGINS` is already set, ensure it includes the exact origin `https://helpbyrehan.github.io` (no `/buildingwAI` path, trailing slash, or wildcard). If unset, the code uses that origin by default. Redeploy after changing variables.
+4. Keep Supabase's existing login/reset URLs for both site origins. Each origin has its own browser login session. For an allowance error, check that `supabase/vercel-study-ai.sql` has been installed; this fix does not modify your live database.
+5. Wait for GitHub Pages to publish the same commit, then reload the assistant. Log in and generate a summary, a quiz, and flashcards. In browser Network, OPTIONS to the Vercel API should return **204**, followed by a POST to the same API. An authenticated successful generation should return **200** JSON. An unauthenticated POST should return **401** JSON with `Access-Control-Allow-Origin: https://helpbyrehan.github.io`. There should be no AI POST to `helpbyrehan.github.io/api/study-ai`.
+
+For immediate access to the server-hosted page, use `https://buildingwai-apstudyhub.vercel.app/assistant/` and log in there. Reachability and login enforcement were verified; actual production AI generation still requires an authenticated session, functioning quota SQL, and provider access.
+
+The separate Worker at `https://ap-study-hub-ai.rehan-nabeel19.workers.dev/health` reported healthy with authentication configured. It is not called by this frontend or the Vercel handler. Do not insert its private shared key into browser JavaScript. The Vercel handler already calls the Cloudflare model REST API with server-only credentials.
+
+Local checks cover API success/auth/quota/refund behavior, allowed and rejected browser origins, OPTIONS handling, endpoint selection, secure token transport, and client error messages. Browser UI checks use synthetic notes and mocked AI output; they do not establish successful live provider generation. GitHub/Vercel publication and live database/provider checks are separate deployment checks.
 
 ## Setup
 
@@ -20,6 +42,7 @@ This package preserves the supplied HTML, CSS, navigation and Supabase-backed fe
 | `SUPABASE_SERVICE_ROLE_KEY` | Existing project's service-role key; server quota RPCs only | **Yes** |
 | `CLOUDFLARE_ACCOUNT_ID` | Account owning Workers AI access | No |
 | `CLOUDFLARE_API_TOKEN` | API token with Workers AI read/write permissions for that account | **Yes** |
+| `STUDY_AI_ALLOWED_ORIGINS` | Optional comma-separated exact origins; default `https://helpbyrehan.github.io` | No |
 
 `.env.example` lists all variables. The old custom `STUDY_AI_API_KEY` is **not** a Cloudflare API token and cannot replace `CLOUDFLARE_API_TOKEN`. Model usage remains subject to your provider's allowance/billing. Vercel runs the application logic; inference is supplied by the external model API.
 

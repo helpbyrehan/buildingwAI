@@ -4,8 +4,30 @@ const { generateStudyAid } = require('../server/study-engine');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Vary', 'Origin');
   const send = (status, detail) => res.status(status).json({detail});
-  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return send(405, 'Method not allowed.'); }
+  const origin = req.headers.origin;
+  const allowedOrigins = (process.env.STUDY_AI_ALLOWED_ORIGINS || 'https://helpbyrehan.github.io')
+    .split(',').map(value => value.trim()).filter(Boolean);
+  // Same-origin Vercel requests remain supported, including trusted previews.
+  const sameOrigin = req.headers.host && origin === `https://${req.headers.host}`;
+  if (origin && !sameOrigin && !allowedOrigins.includes(origin)) return send(403, 'This website is not allowed to use Study AI.');
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Expose-Headers', 'X-Request-ID');
+  }
+  if (req.method === 'OPTIONS') {
+    const method = req.headers['access-control-request-method'];
+    const headers = (req.headers['access-control-request-headers'] || '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean);
+    if (!origin || method !== 'POST' || headers.some(value => !['authorization', 'content-type'].includes(value))) {
+      return send(403, 'This browser request is not allowed.');
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    res.setHeader('Access-Control-Max-Age', '600');
+    return res.status(204).end();
+  }
+  if (req.method !== 'POST') { res.setHeader('Allow', 'POST, OPTIONS'); return send(405, 'Method not allowed.'); }
   const env = process.env;
   const required = ['SUPABASE_URL','SUPABASE_ANON_KEY','SUPABASE_SERVICE_ROLE_KEY','CLOUDFLARE_ACCOUNT_ID','CLOUDFLARE_API_TOKEN'];
   if (required.some(key => !env[key])) return send(503, 'Study AI is not configured. Ask the site owner to check Vercel environment variables.');

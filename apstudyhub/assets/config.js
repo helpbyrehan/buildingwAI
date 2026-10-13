@@ -5,5 +5,9 @@ window.AP_STUDY_HUB_CONFIG = {
   PENDING_BUCKET: "ap-resources",
   PUBLIC_BUCKET: "ap-public-resources",
   MAX_UPLOAD_MB: 25,
-
+  // GitHub Pages serves static files; Vercel runs the authenticated AI API.
+  // Keep Vercel production/preview deployments on their own same-origin API.
+  STUDY_AI_API_URL: window.location.hostname.endsWith(".github.io")
+    ? "https://buildingwai-apstudyhub.vercel.app/api/study-ai"
+    : "/api/study-ai",
 };

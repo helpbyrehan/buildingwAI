@@ -399,14 +399,12 @@
       try{
         const {data:sessionData,error:sessionError}=await db.auth.getSession();
         if(sessionError||!sessionData.session)throw new Error('Please log in again to use Study AI.');
-        const response=await fetch('/api/study-ai',{
-          method:'POST',
-          headers:{'Content-Type':'application/json','Authorization':'Bearer '+sessionData.session.access_token},
-          body:JSON.stringify(requestBody),
-          signal:AbortSignal.timeout(110000)
+        const payload=await window.APStudyAI.generate({
+          apiUrl:CFG.STUDY_AI_API_URL,
+          pageOrigin:location.origin,
+          accessToken:sessionData.session.access_token,
+          body:requestBody
         });
-        const payload=await response.json().catch(()=>null);
-        if(!response.ok||!payload)throw new Error(payload?.detail||'Study AI could not complete this request. Please try again.');
         renderAssistantResult(payload);
       }catch(error){
         output.innerHTML=`<div class="empty compact"><h3>Study AI is unavailable</h3><p>${esc(errorMessage(error,'Please try again shortly.'))}</p></div>`;

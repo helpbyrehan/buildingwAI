@@ -1,0 +1,6 @@
+public/
+node_modules/
+.vercel/
+.env
+.env.*
+!.env.example
