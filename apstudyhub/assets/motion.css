@@ -1,0 +1,64 @@
+/* A small, shared motion layer. Content and navigation never depend on animation. */
+:root{--motion-ease:cubic-bezier(.2,.75,.25,1)}
+.brand .mark,.study-sidebar-brand img{filter:none;transition:transform .45s var(--motion-ease),box-shadow .3s;border-radius:30%}
+.study-sidebar-brand:hover img,.brand:hover .mark{transform:rotate(-6deg) scale(1.06);box-shadow:0 0 24px color-mix(in srgb,var(--text) 12%,transparent)}
+.reveal,.reveal.in-view{opacity:1;transform:none;transition:none}
+.motion-enter.is-motion-visible{animation:apsh-rise .65s var(--motion-ease) both;animation-delay:var(--enter-delay,0ms)}
+.motion-enter:focus-within{animation:none}
+@keyframes apsh-rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes apsh-page-in{from{opacity:.35;translate:0 8px}to{opacity:1;translate:0 0}}
+@media(prefers-reduced-motion:no-preference){
+  html:not([data-motion=paused]) main{animation:apsh-page-in .38s var(--motion-ease)}
+}
+/* Native transitions preserve normal links, browser history, and new-tab behavior. */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:apsh-page-out .16s ease both}
+::view-transition-new(root){animation:apsh-page-in .3s var(--motion-ease) both}
+@keyframes apsh-page-out{to{opacity:0}}
+html[data-motion=paused]::view-transition-old(root),html[data-motion=paused]::view-transition-new(root){animation:none}
+.motion-sky{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;border-radius:inherit;contain:paint}
+.has-motion-sky::after{display:none}
+.sky-star{position:absolute;left:var(--x);top:var(--y);width:var(--size);height:var(--size);animation:apsh-drift var(--duration) ease-in-out infinite alternate;animation-delay:var(--delay);animation-play-state:paused}
+.sky-star::before{content:"";position:absolute;inset:0;background:var(--text);mask:var(--star-mask) center/contain no-repeat;opacity:.45;animation:apsh-twinkle calc(var(--duration) * .63) ease-in-out infinite alternate;animation-delay:var(--delay);animation-play-state:paused}
+.motion-sky.is-sky-visible .sky-star,.motion-sky.is-sky-visible .sky-star::before{animation-play-state:running}
+@keyframes apsh-drift{from{transform:translate3d(0,-5px,0) rotate(-9deg)}to{transform:translate3d(5px,7px,0) rotate(12deg)}}
+@keyframes apsh-twinkle{0%{opacity:.22;scale:.72}60%{opacity:.7}100%{opacity:.42;scale:1.15}}
+.sky-trail{position:absolute;left:8%;top:24%;width:100px;height:1px;opacity:0;rotate:-24deg;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--text) 55%,transparent));animation:apsh-shoot 18s ease-out infinite;animation-delay:3s;animation-play-state:paused}
+.motion-sky.is-sky-visible .sky-trail{animation-play-state:running}
+@keyframes apsh-shoot{0%,84%{opacity:0;transform:translateX(-90px)}86%{opacity:.6}92%,100%{opacity:0;transform:translateX(240px)}}
+main[data-home] .hero:has(.is-sky-visible)::before{animation:apsh-glow 12s ease-in-out infinite alternate;transform-origin:50% 100%}
+@keyframes apsh-glow{from{transform:scale(.96);opacity:.68}to{transform:scale(1.08);opacity:1}}
+.pulse{animation:apsh-beacon 4.5s ease-in-out infinite}
+@keyframes apsh-beacon{0%,100%{opacity:1}50%{opacity:.45}}
+.btn,.icon-btn,.study-sidebar-opener,.chip{transition:transform .24s var(--motion-ease),background-color .2s,color .2s,border-color .2s,box-shadow .24s}
+.btn:active,.icon-btn:active,.study-sidebar-opener:active{transform:scale(.97)}
+.course-card,.resource-card,.study-card{position:relative;transition:translate .3s var(--motion-ease),background-color .25s,color .25s,box-shadow .3s}
+.course-card .arrow,.resource-card .arrow{transition:translate .3s var(--motion-ease)}
+.study-sidebar-link svg{transition:transform .26s var(--motion-ease)}
+.input,.select,.textarea,.hero-search{transition:border-color .2s,box-shadow .25s,background-color .2s}
+.input:focus,.select:focus,.textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--text) 9%,transparent)}
+.calc-mini-track span,.progress span{transition:width .6s var(--motion-ease)}
+.motion-toggle{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+.motion-toggle svg{width:17px;height:17px}
+.motion-toggle[aria-pressed=true]{color:var(--faint)}
+.motion-toggle .motion-pause{display:none}
+.motion-toggle[aria-pressed=true] .motion-pause{display:block}
+@media(hover:hover) and (pointer:fine){
+  .btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px color-mix(in srgb,var(--text) 8%,transparent)}
+  .btn:active{transform:translateY(0) scale(.97)}
+  .course-card:hover,.resource-card:hover,.study-card:hover{translate:0 -4px;box-shadow:0 10px 28px color-mix(in srgb,var(--text) 5%,transparent);z-index:1}
+  .course-card:hover .arrow,.resource-card:hover .arrow{translate:4px 0}
+  .study-sidebar-link:hover svg{transform:translateX(2px)}
+  .icon-btn:hover{transform:translateY(-2px)}
+}
+/* Pause decorative loops when offscreen or in a background tab. */
+html[data-page-hidden] .sky-star,html[data-page-hidden] .sky-star::before,html[data-page-hidden] .sky-trail,html[data-page-hidden] .hero::before,html[data-page-hidden] .pulse{animation-play-state:paused!important}
+html[data-motion=paused] *,html[data-motion=paused] *::before,html[data-motion=paused] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+html[data-motion=paused] .reveal{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  @view-transition{navigation:none}
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  ::view-transition-old(root),::view-transition-new(root){animation:none!important}
+  .reveal{opacity:1;transform:none}
+}
+@media(max-width:650px){.sky-trail{width:60px}.sky-star{max-width:12px;max-height:12px}.motion-toggle{width:36px;height:36px}.has-study-sidebar .topbar .nav{gap:8px}.has-study-sidebar .topbar .nav-actions{gap:6px}}

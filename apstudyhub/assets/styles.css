@@ -534,3 +534,130 @@ main[data-home] .section-head h2,.section-head h2,.page-head h1,.course-hero h1,
 .ai-result-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line);margin-top:26px;padding-top:18px;color:var(--muted);font:9px "DM Mono";text-transform:uppercase;letter-spacing:.07em}
 @media(max-width:900px){.assistant-layout{grid-template-columns:1fr}.assistant-results{grid-row:2}.assistant-form .textarea{min-height:230px}}
 @media(max-width:650px){.assistant-options{grid-template-columns:1fr}.assistant-form,.assistant-output{padding:20px}.field-meta{align-items:flex-start;flex-direction:column;gap:4px}.ai-term{grid-template-columns:1fr;gap:4px}.ai-result-footer{align-items:stretch;flex-direction:column}.ai-result-footer .btn{width:100%}}
+
+/* Modern Product Launch refresh: retain the existing page structure and behavior. */
+:root{
+  --bg:#ffffff;
+  --surface:#fafbf8;
+  --surface2:#eef1e8;
+  --text:#171a13;
+  --muted:#63685e;
+  --faint:#7c8373;
+  --border:#dfe3d8;
+  --line:#e5e8df;
+  --accent:#485d18;
+  --accent-soft:#eaf0dc;
+  --on-accent:#ffffff;
+  --nav:rgba(255,255,255,.95);
+  --shadow:0 16px 48px rgba(35,45,23,.08);
+  --display:"Instrument Serif",Georgia,"Times New Roman",serif;
+}
+html[data-theme=dark]{
+  --bg:#141710;
+  --surface:#1b1f16;
+  --surface2:#282f20;
+  --text:#f3f5ec;
+  --muted:#b2baa6;
+  --faint:#929c85;
+  --border:#39412e;
+  --line:#303827;
+  --accent:#c1d496;
+  --accent-soft:#2d3820;
+  --on-accent:#1a2410;
+  --nav:rgba(20,23,16,.95);
+  --shadow:0 16px 48px rgba(0,0,0,.22);
+}
+body{line-height:1.6}
+body:before{background:none}
+.topbar{border-bottom-color:var(--line)}
+.nav{height:84px;gap:20px}
+.brand{gap:11px}
+.brand strong{letter-spacing:-.025em}
+.navlinks{font-family:"DM Sans",Arial,sans-serif;font-size:12px;letter-spacing:0;text-transform:none;gap:18px}
+.navlinks a{border-bottom:2px solid transparent}
+.navlinks a:hover,.navlinks a.active{border-bottom-color:var(--accent);color:var(--accent)}
+.icon-btn,.menu-btn{border-color:var(--line);border-radius:50%;background:var(--surface)}
+.profile-menu{border-radius:18px;background:var(--bg);padding:10px}
+.profile-menu a,.profile-menu button{border-radius:10px}
+.btn{border-radius:999px;text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;padding:13px 20px;line-height:1.4;transition:background-color .18s,color .18s,border-color .18s}
+.btn:hover{transform:none;border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.btn-primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.btn-primary:hover{background:color-mix(in srgb,var(--accent) 88%,var(--text));color:var(--on-accent)}
+.btn-danger:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-small{padding:9px 14px;font-size:11px}
+.btn-ghost{border-color:transparent}
+.eyebrow,.kicker{color:var(--accent);letter-spacing:.07em}
+.hero h1,.section-head h2,.page-head h1,.course-hero h1,.auth h1,.auth-box h1,.hub-intro h1,.hub-section-head h2,.side-panel h2,.policy-copy h2,.resource-detail h1,.calc-hero h1,.calc-method h2{font-family:var(--display);font-weight:400;letter-spacing:-.035em}
+main[data-home] .hero{min-height:0;padding:88px 0 76px}
+main[data-home] .hero h1{font-size:clamp(66px,9vw,116px);line-height:.99;letter-spacing:-.04em;margin:30px auto 28px}
+main[data-home] .hero h1 em{color:var(--accent)}
+main[data-home] .hero-copy{font-size:16px;line-height:1.7;max-width:600px}
+.hero-search{border:1px solid var(--border);border-radius:999px;padding:5px 5px 5px 22px;background:var(--surface)}
+.hero-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.hero-search input{font-size:16px;padding:10px 10px 10px 0}
+.hero-search .btn{border:1px solid var(--accent);flex-shrink:0}
+.home-actions{gap:10px;row-gap:12px}
+.skip-link{text-transform:none;letter-spacing:0;font-size:12px}
+.home-strip{background:var(--surface)}
+.strip-item{border-right-color:var(--line);min-height:122px;padding-block:26px}
+.strip-item strong{font-family:var(--display);font-weight:400;font-size:46px;letter-spacing:-.04em}
+.strip-item span{font-family:"DM Sans",Arial,sans-serif;font-size:11px;letter-spacing:0;text-transform:none}
+.section{padding:80px 0}
+main[data-home] .section-head h2{font-size:clamp(42px,5.7vw,72px);line-height:1.02}
+.section-head p{line-height:1.7}
+.course-card,.resource-card,.study-card{transition:background-color .2s,color .2s}
+.course-card:hover{background:var(--accent-soft);color:var(--text)}
+.course-card:hover p{color:var(--muted)}
+.course-card h3,.resource-card h3,.study-card h3{font-family:var(--display);font-weight:400;letter-spacing:-.02em;line-height:1.12}
+.course-card p{text-transform:none;letter-spacing:0;font-size:12px}
+.study-card:hover{background:var(--surface)}
+.course-icon,.arrow{color:var(--accent)}
+.chip,.calc-tags span,.calc-badge{border-radius:999px;background:var(--surface)}
+.panel,.question-card,.discussion-thread{border-radius:20px}
+.notice,.dropzone{border-radius:12px}
+.metric-grid{border-radius:18px;overflow:hidden;background:var(--surface)}
+.metric strong{font-family:var(--display);font-weight:400;font-size:38px}
+.progress,.progress span,.calc-mini-track,.calc-mini-track span{border-radius:8px}
+.hub-nav a,.tabs button{border-radius:999px;font-family:"DM Sans",Arial,sans-serif;letter-spacing:0;text-transform:none;font-size:12px}
+.hub-nav a.active,.hub-nav a:hover,.tabs button.active{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.hub-section-head h2,.side-panel h2{line-height:1.12}
+.hub-intro h1,.page-head h1,.course-hero h1,.auth h1{line-height:1.03}
+.input,.select,.textarea{border:1px solid var(--border);border-radius:10px;background:var(--bg);padding:11px 12px;line-height:1.5}
+.field input:focus-visible,.field select:focus-visible,.field textarea:focus-visible{outline-color:var(--accent)}
+.field label,.filter label{line-height:1.6}
+.answer,.ai-choice{border-radius:12px}
+.search-large{border-bottom-color:var(--border)}
+.search-large input{font-family:var(--display);font-weight:400;letter-spacing:-.03em}
+.calc-workspace .calc-number{border-radius:8px}
+.calc-score-line strong{font-family:"DM Sans",Arial,sans-serif}
+.calc-hero h1{line-height:1.03}
+.calc-method h2{line-height:1.08}
+.footer{font-family:"DM Sans",Arial,sans-serif;font-size:11px;text-transform:none;letter-spacing:0;color:var(--muted)}
+.toast{border-radius:14px}
+@media(max-width:1100px) and (min-width:651px){
+  .nav{gap:12px}
+  .navlinks{font-size:11px;gap:12px}
+  .brand span{display:none}
+  .auth-actions .btn-small{padding:8px 10px}
+}
+@media(max-width:650px){
+  .nav{height:68px;gap:8px}
+  .nav.open .navlinks{background:var(--bg);border-radius:0 0 18px 18px;box-shadow:var(--shadow);font-size:14px;gap:8px}
+  .nav.open .navlinks a{padding:10px 0}
+  .mobile-auth .btn-primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+  main[data-home] .hero{padding:50px 0 46px}
+  main[data-home] .hero h1{font-size:clamp(56px,14vw,80px);line-height:1.01;letter-spacing:-.035em;margin:25px auto}
+  main[data-home] .hero-copy{font-size:14px}
+  .hero-search{border:1px solid var(--border);border-radius:24px;padding:6px 6px 6px 15px;gap:6px;flex-wrap:nowrap}
+  .hero-search input{flex:1;min-width:0;width:auto;border:0;padding:10px 0;font-size:16px}
+  .hero-search .btn{width:auto;border:1px solid var(--accent);padding:12px 15px}
+  .home-actions .btn{min-height:46px}
+  .strip-item{padding:22px 0;min-height:100px}
+  .section{padding:56px 0}
+  main[data-home] .section-head h2{font-size:clamp(40px,10vw,56px);line-height:1.06}
+  .page-head h1,.hub-intro h1,.course-hero h1,.auth h1{font-size:clamp(42px,11vw,60px)}
+  .calc-hero h1{font-size:clamp(48px,12vw,68px)}
+  .panel,.question-card{border-radius:16px}
+  .resource-card,.course-card{min-height:210px}
+}
+@media(prefers-reduced-motion:reduce){.btn,.course-card,.resource-card,.study-card{transition:none}}

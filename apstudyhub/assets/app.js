@@ -96,6 +96,8 @@
     const t=localStorage.getItem('apsh-theme')||'dark';
   
     document.documentElement.dataset.theme=t;
+    const themeColor=document.querySelector('meta[name="theme-color"]');
+    if(themeColor)themeColor.content=t==='dark'?'#050505':'#ffffff';
   
     const b=$('#themeBtn');
   

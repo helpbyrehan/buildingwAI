@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc"><title>AP Study Hub</title><desc>Minimal AP Study Hub monogram logo with an open book and central A.</desc><rect x="2" y="2" width="60" height="60" rx="16" fill="var(--surface,#f5f3ee)" stroke="var(--border,#171714)" stroke-width="2"/><path d="M13 18.5c7-3.6 14-3.4 19 1.2v25.2c-5-4.4-12-4.7-19-1.3V18.5Z" fill="none" stroke="var(--accent,#6c86a1)" stroke-width="2.7" stroke-linejoin="round"/><path d="M51 18.5c-7-3.6-14-3.4-19 1.2v25.2c5-4.4 12-4.7 19-1.3V18.5Z" fill="none" stroke="var(--accent,#6c86a1)" stroke-width="2.7" stroke-linejoin="round"/><path d="M32 19.8v24.9" stroke="var(--text,#121210)" stroke-width="2"/><path d="M28.4 29.5 32 23l3.6 6.5M29.8 27.1h4.4" fill="none" stroke="var(--text,#121210)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">AP Study Hub</title>
+  <desc id="desc">An ascending A with a north star, representing learning and progress.</desc>
+  <rect x="1" y="1" width="62" height="62" rx="19" fill="#f5f5f5" stroke="#d6d6d6" stroke-width="1.5"/>
+  <path d="M14 46 28 17h7L21 46Z" fill="#111"/>
+  <path d="m34 26 14 20h-9l-8-13Z" fill="#111"/>
+  <path d="M25 36h12l4 6H22Z" fill="#111"/>
+  <path d="M47 10c1.1 5 2.8 6.9 8 8-5.2 1.1-6.9 3-8 8-1.1-5-2.8-6.9-8-8 5.2-1.1 6.9-3 8-8Z" fill="#111"/>
+</svg>
