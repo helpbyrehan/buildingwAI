@@ -80,3 +80,40 @@ The website endpoint uses a verified Supabase login instead of the old shared AP
 ## AP score calculator
 
 The new `calculator/` page covers all 42 subjects with attributed scoring models, live weighted breakdowns, source comparisons, target planning, and teacher worksheet cutoffs. It works as a static page on both deployments. See [SCORE-CALCULATOR.md](SCORE-CALCULATOR.md) for accuracy limits, source provenance, validation, and deployment.
+
+### College application tracker
+
+The `/colleges/` workspace tracks college shortlists and application statuses,
+application/decision/enrollment dates, requirements and recommendations, essay
+prompts and drafts, and user-entered costs and aid. It includes date-only deadline
+counts, calendar export, JSON backup/merge, and reversible archiving. Shared tasks
+and essays can be tracked independently of a college. Starter checklists contain
+no assumed due dates and must be customized to each institution.
+
+Browser saving works immediately and requires no new service. Guest and signed-in
+account workspaces use separate local storage keys. Backups contain private notes
+and drafts, so users should keep them private. There are no email or background
+notifications. Calendar files are snapshots with all-day events; exact cutoff
+times and time zones must be checked in the official application portal.
+
+To enable optional private account syncing:
+
+1. Run `supabase/college-tracker.sql` in the existing Supabase project's SQL Editor.
+   This adds one owner-only table, enables Row Level Security, and grants only
+   authenticated select/insert/update access through owner policies. No new
+   credentials or service-role key are needed.
+2. Build and deploy normally. Include `colleges/index.html`, the three
+   `assets/college-*` files, and updated shared navigation/HTML files in the commit.
+3. Log in and choose **Enable account sync** in the tracker. The confirmation
+   explains that essays and notes will be uploaded to the account. Guest data is
+   not automatically moved into an account; export/import it explicitly if needed.
+4. Verify persistence with a second browser and verify that a second account
+   cannot read or update the first account's row. Account saves use an owner filter
+   and expected revision; conflicting changes stop syncing instead of silently
+   overwriting another device's workspace. Reconnect to merge newer versions.
+
+If the migration is missing or syncing fails, the browser copy remains available.
+Turning sync off keeps both existing copies. Database setup and live two-account
+isolation verification must be completed on the real Supabase project before
+advertising cross-device syncing. Run `npm test` for date, backup, calendar,
+validation, and sync conflict tests.

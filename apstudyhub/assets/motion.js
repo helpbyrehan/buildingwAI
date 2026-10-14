@@ -70,7 +70,7 @@
 
     // Each component enters once, including cards loaded after the first render.
     // Nothing is hidden while waiting for network data or observer support.
-    const selector = 'main .reveal,main .page-head,main .hub-intro,main .calc-hero,main .course-hero,main .section-head,main .course-card,main .resource-card,main .study-card,main .panel,main .question-card,main .metric';
+    const selector = 'main .reveal,main .page-head,main .hub-intro,main .calc-hero,main .course-hero,main .section-head,main .course-card,main .resource-card,main .study-card,main .panel,main .question-card,main .metric,main .college-card';
     const enterObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (!entry.isIntersecting) return;
