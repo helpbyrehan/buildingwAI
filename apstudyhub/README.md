@@ -117,3 +117,37 @@ Turning sync off keeps both existing copies. Database setup and live two-account
 isolation verification must be completed on the real Supabase project before
 advertising cross-device syncing. Run `npm test` for date, backup, calendar,
 validation, and sync conflict tests.
+
+## College essay coach — 15 October 2026
+
+`/essay-coach/` adds advice-only draft review, six writing criteria, exact draft
+excerpts, revision priorities, strengths, paragraph notes, and reflection
+questions. Students can send a saved tracker essay into the coach, choose their
+review focus, locate quoted text, and download draft/feedback copies. The page
+supports the site's themes, mobile navigation, and reduced-motion preferences.
+Example feedback is a clearly labeled prepared demonstration requiring no API.
+
+`api/essay-coach.js` uses the existing server-only Supabase and Cloudflare
+credentials. It shares Study AI's five requests per user per UTC day, rejects
+unauthenticated requests, and refunds failed generation. Include the new API,
+server modules, browser assets, page, configuration, and updated shared sidebar
+in one commit. Push to the existing GitHub Pages/Vercel branch and verify both
+services publish that commit. **No additional SQL is needed if
+`supabase/vercel-study-ai.sql` is already installed.** College sync's separate SQL
+is unchanged. Static-only localhost previews cannot run the new API.
+
+The current library contains 40 project-original synthetic teaching excerpts,
+selected as six strong/weak contrasts per review. This is example-guided
+prompting, not model weight training. Public essay collections supplied by the
+owner are reading links only; no permissioned human corpus has been supplied.
+User submissions are not collected into the library. See
+[docs/essay-coach.md](docs/essay-coach.md) for privacy, source status, permissioned
+curation, and a human evaluation plan. `npm run check:essay-library` checks library
+metadata and consistency; it does not establish educational accuracy.
+
+Validation for this addition covers mocked API auth/quota/refund/CORS cases,
+structured output, exact quote grounding, retry behavior, and advice-only
+constraints. Browser checks cover the prepared example, stale review handling,
+quote selection, protected draft replacement, tracker handoff, download, and
+320px light/dark layouts. Actual provider generation and feedback quality still
+need testing on the deployed authenticated endpoint.

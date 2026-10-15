@@ -16,6 +16,7 @@
 
     const paths = {
       dashboard: '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5h7m-3.5-3.5v7"/>',
+      pen: '<path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14l-1 7 7-1M3 21l5-5"/>',
       graduation: '<path d="m2 9 10-5 10 5-10 5L2 9Zm4 2v6c4 3 8 3 12 0v-6m4-2v7"/>',
       book: '<path d="M12 5.5C9 3.5 5.5 3.5 3 4.5v15c2.5-1 6-1 9 1 3-2 6.5-2 9-1v-15c-2.5-1-6-1-9 1Zm0 0v15"/>',
       calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-13 4h2m4 0h2"/>',
@@ -41,6 +42,7 @@
         ['Courses', 'courses/', 'book'],
         ['Study planner', 'planner/', 'calendar'],
         ['College applications', 'colleges/', 'graduation'],
+        ['Essay coach', 'essay-coach/', 'pen'],
         ['Practice', 'practice/', 'practice'],
         ['Study AI', 'assistant/', 'sparkle'],
         ['Score calculator', 'calculator/', 'calculator'],

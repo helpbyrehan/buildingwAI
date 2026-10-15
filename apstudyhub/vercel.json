@@ -6,6 +6,9 @@
   "functions": {
     "api/study-ai.js": {
       "maxDuration": 120
+    },
+    "api/essay-coach.js": {
+      "maxDuration": 120
     }
   },
   "headers": [

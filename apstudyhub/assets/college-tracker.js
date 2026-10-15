@@ -207,6 +207,18 @@
     });
     for(const dialog of $$('#collegeEditor,#taskEditor,#essayEditor'))dialog.addEventListener('cancel',e=>{e.preventDefault();closeEditor(dialog);});
     $('#essayDraft').addEventListener('input',updateWordCount);$('#essayWordLimit').addEventListener('input',updateWordCount);
+    $('#reviewCollegeEssay').onclick=async()=>{
+      const form=$('#collegeEssayForm');if(!form.reportValidity())return;
+      try{
+        const v=formValues(form),input=window.EssayCoach.input({draft:v.draft,prompt:v.prompt,wordLimit:v.wordLimit,kind:v.collegeId?'supplement':'personal',focus:'balanced'});
+        const row=C.essay({...workspace.essays.find(e=>e.id===v.id),...v,id:v.id||uuid(),updatedAt:now()});
+        upsert('essays',row);
+        sessionStorage.setItem('apsh-essay-coach-handoff',JSON.stringify({owner:user?.id||'guest',input,createdAt:Date.now()}));
+        await closeEditor($('#essayEditor'),true);
+        location.href=(window.APSH_BASE||'../')+'essay-coach/';
+      }catch(error){$('#essayFormError').textContent=error.message||'The coach could not open. Your saved essay is still available.';}
+    };
+
   }
   function wireEvents() {
     $('#addCollege').onclick=()=>openCollege();$('#addTask').onclick=()=>openTask();$('#addEssay').onclick=()=>openEssay();
@@ -302,7 +314,7 @@
     db=runtime.supabaseClient||null;
     if(runtime.userPromise)user=await runtime.userPromise;
     storageKey='apsh-college-tracker:v1:'+(user?.id||'guest');
-    readLocal();render();wireForms();wireEvents();storageStatus();$('#collegeSync').disabled=false;
+    readLocal();render();wireForms();wireEvents();const requestedView=new URLSearchParams(location.search).get('view');if(['colleges','deadlines','checklist','essays','compare'].includes(requestedView))switchTab(requestedView);storageStatus();$('#collegeSync').disabled=false;
     if(db)db.auth.onAuthStateChange((_event,session)=>{if((session?.user?.id||null)!==(user?.id||null))location.reload();});
     let reconnect=false;try{reconnect=localStorage.getItem(storageKey+':sync')==='true';}catch(_){}
     if(reconnect&&user&&!unreadableRaw)await connectCloud({automatic:true});
