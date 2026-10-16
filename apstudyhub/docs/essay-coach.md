@@ -6,7 +6,67 @@ are prompt alignment, specific detail, reflection, voice, structure, and clarity
 Levels describe the draft under this rubric; there is no validated overall grade
 or admission probability.
 
-## Current implementation
+## Optional local Qwen model (fast first version)
+
+The local training project provides a Qwen3-14B QLoRA adapter and an authenticated
+loopback server (`website-api.py`, launched by **Start Website AI.cmd**). The first
+version uses 100 training examples: 50 UK and 50 US, including 64 factual Q&A
+examples and 36 essay reviews. Six validation examples and six test examples are
+separate, with scenario families kept together. All examples are synthetic; this
+is not an 8,000-essay dataset, human expert training, or measured admissions accuracy.
+See the training project's `fast-data-audit.json` and output-review report for its
+actual completion and evaluation status.
+
+The connection is: GitHub Pages browser → existing Vercel `/api/essay-coach` →
+HTTPS tunnel → local `127.0.0.1:8765/api/review` → trained Qwen model. Existing
+Supabase login, shared daily quota, CORS and failed-request refunds still apply.
+GitHub Pages hosts static files; it does not run the model. The PC must remain on.
+The local server handles one review at a time and rejects concurrent requests
+with 429; the Vercel endpoint refunds the reserved request when generation fails.
+It processes drafts in memory and does not save request bodies or feedback.
+Hosting and tunnel providers still process traffic under their respective terms.
+The coach's existing browser session saving remains unchanged.
+
+After completing the local run, start **Start Website AI.cmd**. On first start it
+creates a private access key in `work/website-api-token.txt` in the training
+workspace (ignored by Git). Expose only this model API through an HTTPS tunnel.
+Set these **server-only Vercel environment variables**, then redeploy:
+
+```
+ESSAY_COACH_PROVIDER=local
+ESSAY_COACH_LOCAL_URL=https://YOUR-TUNNEL-HOST/api/review
+ESSAY_COACH_LOCAL_KEY=<the private local access key>
+```
+
+Keep the existing Supabase variables. Cloudflare AI credentials are not required
+for essay reviews in local mode; Study AI can keep its existing provider. Never
+put the local key in `assets/config.js`, HTML, client JavaScript or Git. Do not use
+`localhost` as the Vercel URL: it would refer to Vercel's computer, not yours.
+
+For a free temporary development connection, install `cloudflared` from its
+[official downloads](https://developers.cloudflare.com/tunnel/downloads/) and run
+`cloudflared tunnel --url http://127.0.0.1:8765`. Use the printed HTTPS hostname in
+the URL above. [Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)
+need no account or domain, but their hostname changes on restart, they have no
+uptime guarantee, and Cloudflare describes them as development/test connections.
+A stable public deployment needs a stable tunnel hostname and suitable hosting
+accounts. No public tunnel or deployment is created just by running the trainer.
+Local model inference has no per-request AI fee; electricity and any hosting or
+network plan limits still apply.
+
+Local feedback uses `local-essay-advice-v1`: plain-text advice escaped for display,
+with a distinct experimental label. It is not silently converted into six rubric
+ratings or passed off as quote-validated structured feedback. Cloudflare mode
+retains the original evidence-checked rubric contract. If the PC is offline,
+local mode fails and refunds the request; it never silently switches providers.
+
+UCAS has separate complete-response and excerpt options. The word-limit field
+does not apply to these options. The local model uses the verified three-question
+format from 2026 entry onwards; the entry year/course should be supplied with the
+prompt. The editor's character count includes typed headings, so the applicant
+must check counts in the actual application fields.
+
+## Cloudflare implementation
 
 `POST /api/essay-coach` verifies the Supabase session, reserves one request from
 the existing five-per-UTC-day Study AI allowance, calls Cloudflare Workers AI,
@@ -34,7 +94,7 @@ injection. A trusted human should assess actual feedback quality.
 ## Privacy and storage
 
 - The user must choose **Get essay advice** to send the displayed draft and
-  prompt to the Vercel endpoint and Cloudflare model. Merely saving an essay in
+  prompt to the Vercel endpoint and selected model (Cloudflare or the locally hosted coach). Merely saving an essay in
   College applications does not send it to AI.
 - AP Study Hub's endpoint does not save or log draft text, prompts, feedback,
   credentials, or full provider errors. It records quota request IDs through the
@@ -113,7 +173,7 @@ static output. Update the library version and tests when approved data changes.
 
 ## Evaluation before claiming accuracy or training a custom model
 
-No real training job or live-model quality evaluation was run for this release.
+The original Cloudflare release did not include a training job or live-model quality evaluation. The separate local training project now supplies the optional adapter; its reports describe the small run and its limitations.
 Automated tests use mocked provider responses, and the example UI uses prepared
 feedback explicitly labeled as a demonstration.
 
@@ -137,5 +197,4 @@ feedback explicitly labeled as a demonstration.
    the reviewer's evidence-grounded coaching response. Recheck consent scope,
    provider data handling, cost, and deployment compatibility before a paid job.
 
-This repository contains no fine-tuning runner, automatic scraper, submission
-harvester, or claim of a custom-trained admission model.
+Model weights, training data, API secrets and the local training runner stay outside this public website repository. No submitted essays are harvested for training.

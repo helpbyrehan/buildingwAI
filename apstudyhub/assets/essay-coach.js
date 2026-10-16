@@ -8,7 +8,7 @@
   const emptyMarkup=$('#coachFeedbackBody').innerHTML;
   let user=null,db=null,key='',busy=false,touched=false,review=null,reviewContext=null,receipt=null,anchors=[],saveTimer,checkingAccount=true;
   const fields=['coachKind','coachFocus','coachPrompt','coachDraft','coachLimit'];
-  const read=()=>({kind:$('#coachKind').value,focus:$('#coachFocus').value,prompt:$('#coachPrompt').value,draft:$('#coachDraft').value,wordLimit:$('#coachLimit').value===''?null:Number($('#coachLimit').value)});
+  const read=()=>({kind:$('#coachKind').value,focus:$('#coachFocus').value,prompt:$('#coachPrompt').value,draft:$('#coachDraft').value,wordLimit:$('#coachKind').value.startsWith('ucas')||$('#coachLimit').value===''?null:Number($('#coachLimit').value)});
   const signature=v=>JSON.stringify({kind:v.kind,focus:v.focus,prompt:v.prompt.trim(),draft:v.draft.replace(/\r\n?/g,'\n').trim(),wordLimit:v.wordLimit});
   const stale=()=>!!reviewContext&&signature(read())!==signature(reviewContext);
   function notice(message){const box=$('#coachNotice');box.classList.remove('hide');box.textContent=message;}
@@ -28,6 +28,11 @@
   function updateEditor(){
     const value=read(),count=C.words(value.draft),over=value.wordLimit&&count>value.wordLimit;
     $('#coachWordCount').textContent=count+(value.wordLimit?' / '+value.wordLimit:'')+' words'+(over?' · over limit':'');$('#coachWordCount').classList.toggle('is-over',!!over);
+    if(value.kind.startsWith('ucas')){
+      $('#coachWordCount').textContent=value.draft.length+' characters in editor · includes typed headings';
+      $('#coachWordCount').classList.remove('is-over');
+    }
+    $('#coachLimit').disabled=value.kind.startsWith('ucas');
     $('#coachDownloadDraft').disabled=!value.draft.trim();
     const warning=$('#coachStale');if(warning)warning.hidden=!stale();
     $$('[data-coach-quote]').forEach(button=>button.disabled=stale());
@@ -36,6 +41,10 @@
   function renderReview(){
     if(!review){$('#coachFeedbackBody').innerHTML=emptyMarkup;return;}
     anchors=[];
+    if(review.version===C.LOCAL_VERSION){
+      $('#coachFeedbackBody').innerHTML=`<div class="coach-report-banner">AI writing feedback · Experimental coach trained on synthetic UK/US practice examples.</div><div class="coach-stale" id="coachStale"${stale()?'':' hidden'}>Your draft or context has changed. This feedback refers to the earlier version.</div><div class="coach-local-advice" style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(review.feedback)}</div><div class="coach-report-actions"><button type="button" class="btn btn-secondary btn-small" id="coachDownloadReview">Download feedback ↓</button></div><p class="coach-allowance">Check the advice against your draft. This is not an official grade or an admission prediction.</p>`;
+      $('#coachDownloadReview').onclick=downloadReview;updateEditor();return;
+    }
     const demo=receipt?.demo;
     $('#coachFeedbackBody').innerHTML=`<div class="coach-report-banner${demo?' is-example':''}">${demo?'Example feedback · prepared demonstration. No AI request was made.':'AI writing feedback · '+esc(new Date(receipt?.createdAt||Date.now()).toLocaleString())+' · Verify the advice before using it.'}</div><div class="coach-stale" id="coachStale"${stale()?'':' hidden'}>Your draft or context has changed since this review. Get fresh feedback for this version. This report still refers to the earlier draft.</div><p class="coach-report-summary">${esc(review.summary)}</p><section class="coach-report-section"><h3>What to revise first</h3><ol class="coach-priorities">${review.priorities.map(p=>`<li class="coach-feedback-item"><h4>${esc(p.issue)}</h4><p>${esc(p.why)}</p>${evidence(p.quote)}<p><strong>Your next step:</strong> ${esc(p.action)}</p></li>`).join('')}</ol></section><section class="coach-report-section"><h3>A closer look at the craft</h3><div class="coach-criteria">${review.criteria.map(r=>`<details class="coach-criterion"><summary>${esc(C.RUBRIC[r.key])}<span class="coach-level level-${r.level}">${esc(C.LEVELS[r.level])}</span></summary><p>${esc(r.observation)}</p>${evidence(r.quote)}<p><strong>Try next:</strong> ${esc(r.next_step)}</p></details>`).join('')}</div></section>${review.strengths.length?`<section class="coach-report-section"><h3>Keep what is working</h3>${review.strengths.map(s=>`<div class="coach-feedback-item coach-strength"><p>${esc(s.point)}</p>${evidence(s.quote)}</div>`).join('')}</section>`:''}${review.paragraph_notes.length?`<section class="coach-report-section"><h3>Notes in the margins</h3>${review.paragraph_notes.map(p=>`<div class="coach-feedback-item coach-paragraph-note"><strong>Paragraph ${p.paragraph}</strong>${evidence(p.quote)}<p>${esc(p.advice)}</p></div>`).join('')}</section>`:''}<section class="coach-report-section"><h3>Questions worth sitting with</h3><ol class="coach-reflection-questions">${review.questions.map(q=>`<li>${esc(q)}</li>`).join('')}</ol></section><div class="coach-report-actions"><button type="button" class="btn btn-secondary btn-small" id="coachDownloadReview">Download feedback ↓</button></div><p class="coach-allowance">These levels describe writing under this rubric. They are not an official grade or an admission prediction.</p>`;
     $('#coachDownloadReview').onclick=downloadReview;updateEditor();
@@ -43,6 +52,9 @@
   function download(content,name,type){const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=name;a.hidden=true;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
   function downloadReview(){
     if(!review)return;
+    if(review.version===C.LOCAL_VERSION){
+      download(['AP Study Hub — Essay coach','Experimental AI feedback; not expert reviewed',review.feedback,'','DRAFT VERSION REVIEWED',reviewContext.draft,'','This download includes private draft text.'].join('\n'),'essay-feedback-'+new Date().toISOString().slice(0,10)+'.txt','text/plain;charset=utf-8');return;
+    }
     const lines=['AP Study Hub — Essay coach',receipt?.demo?'Prepared demonstration — fictional draft':'AI writing feedback, not an admission prediction',`Reviewed: ${receipt?.createdAt||''}`,`Essay type: ${C.KINDS[reviewContext.kind]}`,`Prompt: ${reviewContext.prompt||'Not supplied'}`,`Word count: ${C.words(reviewContext.draft)}`,`Word limit: ${reviewContext.wordLimit||'Not set'}`,'',review.summary,'','REVISION PRIORITIES'];
     review.priorities.forEach((p,i)=>lines.push(`${i+1}. ${p.issue}`,p.why,'Draft excerpt: '+p.quote,'Next step: '+p.action,''));
     lines.push('RUBRIC');review.criteria.forEach(r=>lines.push(C.RUBRIC[r.key]+': '+C.LEVELS[r.level],r.observation,'Draft excerpt: '+r.quote,'Next step: '+r.next_step,''));

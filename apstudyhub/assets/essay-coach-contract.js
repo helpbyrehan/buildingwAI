@@ -1,9 +1,10 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.EssayCoach=factory();})(typeof window!=='undefined'?window:this,function(){
   'use strict';
   const VERSION='essay-coach-v1';
+  const LOCAL_VERSION='local-essay-advice-v1';
   const RUBRIC={prompt:'Prompt alignment',specificity:'Specific detail',reflection:'Reflection & insight',voice:'Personal voice',structure:'Structure & focus',clarity:'Clarity & economy'};
   const LEVELS={needs_work:'Needs work',developing:'Developing',strong:'Strong',not_assessed:'Not enough context'};
-  const KINDS={personal:'Personal statement',supplement:'College supplement',scholarship:'Scholarship essay',other:'Other application response'};
+  const KINDS={personal:'US personal essay',supplement:'US college supplement',ucas:'UCAS · three responses',ucas_excerpt:'UCAS · one response or excerpt',scholarship:'Scholarship essay',other:'Other application response'};
   const FOCUS={balanced:'Full review',reflection:'Reflection & meaning',structure:'Structure & focus',clarity:'Clarity & concision',voice:'Personal voice'};
   const record=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
   const words=v=>String(v||'').trim().match(/\S+/gu)?.length||0;
@@ -13,7 +14,7 @@
     function text(v,max,label,min=0){if(v==null)v='';if(typeof v!=='string'||v.trim().length<min||v.length>max||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(v))throw new Error(label+' is missing, too long, or contains unsupported characters.');return v.replace(/\r\n?/g,'\n').trim();}
     const draft=text(value.draft,16000,'Essay draft',80),prompt=text(value.prompt,4000,'Essay prompt'),focus=value.focus||'balanced',kind=value.kind||'personal';
     if(!Object.hasOwn(FOCUS,focus)||!Object.hasOwn(KINDS,kind))throw new Error('Choose a supported essay type and review focus.');
-    const limit=value.wordLimit===''||value.wordLimit==null?null:Number(value.wordLimit);
+    const limit=kind.startsWith('ucas')||value.wordLimit===''||value.wordLimit==null?null:Number(value.wordLimit);
     if(limit!==null&&(!Number.isInteger(limit)||limit<1||limit>20000))throw new Error('Use a whole-number word limit from 1 to 20,000, or leave it blank.');
     return {draft,prompt,focus,kind,wordLimit:limit};
   }
@@ -24,6 +25,9 @@
     return match?{start:match.index,end:match.index+match[0].length,text:match[0]}:null;
   }
   function validateReview(value,context){
+    if(record(value)&&value.version===LOCAL_VERSION){
+      return typeof value.feedback==='string'&&value.feedback.trim().length>=32&&value.feedback.length<=12000&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value.feedback)?[]:['Local feedback must be bounded plain text.'];
+    }
     const errors=[];if(!record(value))return ['Feedback must be an object.'];
     if(value.version!==VERSION)errors.push('Wrong feedback version.');
     function text(v,label,max,min=1){if(typeof v!=='string'||v.trim().length<min||v.length>max||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(v||''))errors.push(label+' must be plain text of '+min+'–'+max+' characters.');}
@@ -51,6 +55,7 @@
     return errors;
   }
   function selectReview(value){
+    if(value.version===LOCAL_VERSION)return {version:LOCAL_VERSION,feedback:value.feedback};
     return {version:VERSION,summary:value.summary,criteria:value.criteria.map(r=>({key:r.key,level:r.level,observation:r.observation,next_step:r.next_step,quote:r.quote})),strengths:value.strengths.map(r=>({point:r.point,quote:r.quote})),priorities:value.priorities.map(r=>({issue:r.issue,why:r.why,action:r.action,quote:r.quote})),paragraph_notes:value.paragraph_notes.map(r=>({paragraph:r.paragraph,quote:r.quote,advice:r.advice})),questions:value.questions.slice()};
   }
   function endpoint(configuredUrl,pageOrigin){
@@ -72,5 +77,5 @@
     if(errors.length)throw new Error('The feedback could not be verified against your draft. Please try again.');
     return {...payload,result:selectReview(payload.result)};
   }
-  return {VERSION,RUBRIC,LEVELS,KINDS,FOCUS,input,words,paragraphs,findQuote,validateReview,selectReview,endpoint,reviewEssay};
+  return {VERSION,LOCAL_VERSION,RUBRIC,LEVELS,KINDS,FOCUS,input,words,paragraphs,findQuote,validateReview,selectReview,endpoint,reviewEssay};
 });

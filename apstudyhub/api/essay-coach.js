@@ -16,7 +16,9 @@ module.exports=async function handler(req,res){
   }
   if(req.method!=='POST'){res.setHeader('Allow','POST, OPTIONS');return send(405,'Method not allowed.');}
   const env=process.env;
-  if(['SUPABASE_URL','SUPABASE_ANON_KEY','SUPABASE_SERVICE_ROLE_KEY','CLOUDFLARE_ACCOUNT_ID','CLOUDFLARE_API_TOKEN'].some(k=>!env[k]))return send(503,'Essay coach is not configured. Ask the site owner to check the existing Study AI environment variables on Vercel.');
+  const provider=env.ESSAY_COACH_PROVIDER||'cloudflare';
+  const required=['SUPABASE_URL','SUPABASE_ANON_KEY','SUPABASE_SERVICE_ROLE_KEY',...(provider==='local'?['ESSAY_COACH_LOCAL_URL','ESSAY_COACH_LOCAL_KEY']:['CLOUDFLARE_ACCOUNT_ID','CLOUDFLARE_API_TOKEN'])];
+  if(!['local','cloudflare'].includes(provider)||required.some(k=>!env[k]))return send(503,'Essay coach is not configured. Ask the site owner to check its server settings.');
   const authorization=req.headers.authorization||'';
   if(!/^Bearer \S+$/.test(authorization))return send(401,'Log in to get essay feedback.');
   let body=req.body,input;

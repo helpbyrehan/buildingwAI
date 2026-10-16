@@ -9,6 +9,12 @@ const {checkLibrary}=require('../server/essay-library-policy');
 const {messages,generateEssayReview}=require('../server/essay-coach-engine');
 const clone=v=>JSON.parse(JSON.stringify(v));
 const input=C.input(D.input);
+test('local advice has a distinct bounded format and cannot masquerade as a six-criterion assessment',()=>{
+ const value={version:C.LOCAL_VERSION,feedback:'Keep the specific moment, then explain what changed in your actions.',unknown:'private'};
+ assert.deepEqual(C.validateReview(value,input),[]);assert.deepEqual(C.selectReview(value),{version:C.LOCAL_VERSION,feedback:value.feedback});
+ for(const feedback of ['',null,'x'.repeat(12001),'valid length but invalid control '+String.fromCharCode(0)])assert.ok(C.validateReview({...value,feedback},input).length);
+ assert.equal(C.input({...D.input,kind:'ucas',wordLimit:650}).wordLimit,null);
+});
 
 test('prepared demo is evidence-grounded and explicitly a fictional demonstration',()=>{
   assert.deepEqual(C.validateReview(D.review,input),[]);assert.match(D.notice,/demonstration/);assert.equal(D.review.criteria.length,6);

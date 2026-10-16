@@ -53,3 +53,21 @@ test('CORS blocks hostile origins and unsupported headers while allowing same-or
 test('unsupported methods and missing setup never consume an allowance',async()=>{
  mock();assert.equal((await invoke({}, {}, 'DELETE')).code,405);delete process.env.SUPABASE_SERVICE_ROLE_KEY;assert.equal((await invoke()).code,503);assert.equal(calls.length,0);
 });
+test('local coach reuses login and quota without Cloudflare credentials or exposing its access key',async()=>{
+ process.env.ESSAY_COACH_PROVIDER='local';process.env.ESSAY_COACH_LOCAL_URL='https://owner-tunnel.example/api/review';process.env.ESSAY_COACH_LOCAL_KEY='private-local-key-'.repeat(3);
+ delete process.env.CLOUDFLARE_ACCOUNT_ID;delete process.env.CLOUDFLARE_API_TOKEN;
+ mock();const upstream=global.fetch;
+ global.fetch=async(url,options)=>url==='https://owner-tunnel.example/api/review'?(calls.push({url,options}),Response.json({feedback:'This draft has a concrete scene. Explain what changed in your choices after it.'})):upstream(url,options);
+ const r=await invoke({...D.input,kind:'ucas_excerpt',wordLimit:650});assert.equal(r.code,200);assert.equal(r.body.result.version,'local-essay-advice-v1');
+ const local=calls.find(c=>c.url.includes('owner-tunnel'));assert.equal(local.options.headers.Authorization,'Bearer '+process.env.ESSAY_COACH_LOCAL_KEY);assert.equal(JSON.parse(local.options.body).wordLimit,null);
+ assert.equal(local.options.redirect,'error');assert.equal(calls.some(c=>c.url.includes('api.cloudflare.com')),false);assert.equal(JSON.stringify(r.body).includes('private-local-key'),false);
+});
+test('offline local coach refunds allowance and never falls back to a cloud model',async()=>{
+ process.env.ESSAY_COACH_PROVIDER='local';process.env.ESSAY_COACH_LOCAL_URL='https://owner-tunnel.example/api/review';process.env.ESSAY_COACH_LOCAL_KEY='private-local-key-'.repeat(3);
+ mock();const upstream=global.fetch;global.fetch=async(url,options)=>url.includes('owner-tunnel')?(calls.push({url,options}),Response.json({detail:'busy'},{status:429})):upstream(url,options);
+ const r=await invoke();assert.equal(r.code,502);assert.equal(calls.filter(c=>c.url.endsWith('vercel_refund_study_ai')).length,1);assert.equal(calls.some(c=>c.url.includes('api.cloudflare.com')),false);
+});
+test('local provider rejects unsafe tunnel configuration before sending credentials',async()=>{
+ process.env.ESSAY_COACH_PROVIDER='local';process.env.ESSAY_COACH_LOCAL_URL='http://owner-tunnel.example/api/review';process.env.ESSAY_COACH_LOCAL_KEY='private-local-key-'.repeat(3);
+ mock();assert.equal((await invoke()).code,502);assert.equal(calls.some(c=>c.url.includes('owner-tunnel')),false);
+});
